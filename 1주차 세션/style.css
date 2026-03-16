@@ -1,0 +1,119 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    display: flex; /*자식 요소 모두 flex 속성으로(정렬 용이)*/
+    /*자식 요소를 모두 가운데 정렬*/
+    justify-content: center;
+    align-items: center;
+    /*처음에는 웹 브라우저 전체 크기를 body로 사용안함.. 위로 붙어있는 형태
+    웹 브라우저 전체를 사용해야 위 두 정렬로 인해 가운데로 올 수 있음*/
+    height: 100vh; /*브라우저 전체 100%를 사용하자*/
+    background-color: #f1f1f1;
+}
+
+.todo-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0,1);
+    width: 350px;
+    text-align: center;
+}
+
+.todo-container__header {
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+
+.todo-container__form {
+    display: flex; /*자식 요소인 input과 button 정렬을 가능하게*/
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.todo-container__input {
+    /*input 요소가 flex 자식 중 그 줄 (block 라인)을 다 차지하고 싶을 때*/
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.todo-container__button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 6px;
+    /*button이 변화가 일어날 때 0.3초로 바뀌게, 변화가 없으면 적용도 x*/
+    transition: background-color 0.3s ease;
+}
+
+/*여기서 마우스 올릴 때 변화를 주는 것, 색상 바뀌게*/
+.todo-container__button:hover {
+    background-color: #218838;
+}
+
+.render-container {
+    display: flex;
+    /*가능한 공간 내에서 자식 요소 양쪽 끝으로, gap의 의미 약해짐 */
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.render-container__section {
+    width: 100%;
+    text-align: center;
+}
+.render-container__title {
+    font-size: 18px;
+    margin-bottom: 10px;
+    /*flex-direction: row; flex는 요소 가로배치가 기본값, 없어도 ok*/
+    display: flex;
+    justify-content: center;
+}
+
+.render-container__list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.render-container__item {
+    display: flex; /*처음에 text와 button부분이 위아래 정렬되어있음*/
+    justify-content: space-between;
+    align-items: center; /*할일 목록 들이 세로로 중앙정렬되게*/
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    width: 100%;
+}
+
+.render-container__text {
+    flex: 1;
+}
+
+/* 할일 녹색은 자바스크립트에서 동적으로 */
+.render-container__item-button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 12px;
+    transition: background-color 0.3s ease;
+}
+
+.render-container__item-button:hover {
+    background-color: #c82333;
+}
