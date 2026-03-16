@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>TypeScript</title>
+  <style>
+  
+    * { box-sizing: border-box; }
+    body { background-color: #fdfdfd; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; padding: 50px 20px; }
+    .container { width: 100%; max-width: 450px; }
+    .task-input { width: 100%; padding: 15px; border: 3px solid #222; border-radius: 15px; box-shadow: 4px 4px 0 #222; outline: none; font-size: 16px; font-weight: bold; }
+    .section-title { margin: 30px 0 15px; font-size: 20px; font-weight: 800; color: #222; }
+    .task-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+    .task-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border: 2px solid #222; border-radius: 12px; box-shadow: 3px 3px 0 #222; }
+    .is-done { background: #f0f0f0; border-color: #ccc; box-shadow: none; }
+    .is-done .task-text { text-decoration: line-through; color: #999; }
+    .btn { padding: 5px 10px; border: 2px solid #222; border-radius: 8px; font-weight: bold; cursor: pointer; margin-left: 5px; }
+    .btn--complete { background: #ff6b4a; color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <input type="text" id="todo-input" class="task-input" placeholder="새로운 할 일을 입력하세요!">
+
+    <h2 class="section-title">할 일</h2>
+    <ul id="active-list" class="task-list"></ul>
+
+    <h2 class="section-title">완료</h2>
+    <ul id="done-list" class="task-list"></ul>
+  </div>
+
+  <script src="./dist/index.js"></script>
+</body>
+</html>
