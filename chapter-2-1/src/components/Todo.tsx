@@ -1,5 +1,4 @@
-import { useContext, useState, type FormEvent} from "react"
-import type {TTodo } from "../types/todo";
+
 import TodoList from "./TodoList";
 import TodoForm from "./TodoForm";
 import { useTodo } from "../context/TodoContext";

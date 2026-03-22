@@ -4,9 +4,27 @@ interface TodoFormProps{
     handleSubmit: (e:React.FormEvent<HTMLFormElement>) => void;
 }
 
-import React from 'react';
+import React, { useState, type FormEvent } from 'react';
+import { useTodo } from '../context/TodoContext';
 
-const TodoForm = ({input,setInput,handleSubmit}:TodoFormProps) => {
+const TodoForm = () => {
+    
+    const [input, setInput] = useState<string>('');
+    const {addTodo} = useTodo();
+    
+
+    const handleSubmit = (e:FormEvent<HTMLFormElement>) :void => {
+        e.preventDefault();
+        const text = input.trim();
+
+        if(text){
+            //addTodo
+            setInput('');
+            addTodo(text);
+        }
+    };
+
+    
     return <div>
     <form onSubmit={handleSubmit} className='todo-conatainer__form'>
         <input
