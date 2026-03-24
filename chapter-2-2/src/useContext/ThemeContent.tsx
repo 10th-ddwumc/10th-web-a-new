@@ -10,12 +10,12 @@ export default function ThemeContent() {
     return (
     <div
     className={clsx(
-        'p-2 h-dvh w-full',
+        'p-2 min-h-screen w-full',
         isLightmode ? 'bg-white' : 'bg-gray-800'
     )}>
         <h1
         className={clsx(
-            'text-wxl font-bold',
+            'text-2xl font-bold',
             isLightmode ? 'text-black' : 'text-white'
         )}>
             Themecontent
