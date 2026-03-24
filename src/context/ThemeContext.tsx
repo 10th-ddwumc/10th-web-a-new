@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Theme = 'light' | 'dark';
+const THEME_KEY = 'app-theme'; // 기존 'theme' 문자열 대신 사용
+const THEMES = {
+  LIGHT: 'light',
+  DARK: 'dark',
+} as const;
+
+type Theme = typeof THEMES[keyof typeof THEMES];
 
 interface ThemeContextType {
   theme: Theme;
@@ -11,21 +17,25 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    return (localStorage.getItem('theme') as Theme) || 'light';
+
+    return (localStorage.getItem(THEME_KEY) as Theme) || THEMES.LIGHT;
   });
 
   useEffect(() => {
-    localStorage.setItem('theme', theme);
 
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
+    localStorage.setItem(THEME_KEY, theme);
+
+
+    if (theme === THEMES.DARK) {
+      document.documentElement.classList.add(THEMES.DARK);
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove(THEMES.DARK);
     }
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+
+    setTheme((prev) => (prev === THEMES.LIGHT ? THEMES.DARK : THEMES.LIGHT));
   };
 
   return (
