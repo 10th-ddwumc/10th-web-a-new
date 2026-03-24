@@ -1,19 +1,19 @@
-import { Routes, Route } from 'react-router-dom';
-import Layout from './components/Layout';
-import Home from './pages/Home.tsx';
+import { Routes, Route } from 'react-router-dom'; 
 import MoviesPage from './pages/MoviesPage';
-import MovieDetailPage from './pages/MovieDetailPage.tsx';
+import MovieDetailPage from './pages/MovieDetailPage';
+import Navbar from './components/Navbar';
+import Home from './pages/Home';
 
 function App() {
   return (
+    <> 
+      <Navbar />
 <Routes>
-
-  <Route path="/" element={<Layout />}>
-    <Route index element={<Home />} />
-    <Route path="movies" element={<MoviesPage />} />
-    <Route path="movies/:movieId" element={<MovieDetailPage />} />
-  </Route> 
+  <Route path="/" element={<Home />} /> 
+  <Route path="/movies" element={<MoviesPage />} /> 
+  <Route path="/movies/:movieId" element={<MovieDetailPage />} />
 </Routes>
+    </>
   );
 }
 
