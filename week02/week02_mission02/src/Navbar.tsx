@@ -9,10 +9,10 @@ export default function Navbar() {
 
   return (
     <nav
-      className={clsx(
-        "p-4 w-full flex justify-end",
-        isLightMode ? "bg-white" : "bg-gray-800",
-      )}
+      className={clsx("p-4 w-full flex justify-end", {
+        "bg-white": isLightMode,
+        "bg-gray-800": !isLightMode,
+      })}
     >
       <ThemeToggleButton />
     </nav>
