@@ -35,7 +35,7 @@ const MoviesPage = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-orange-500 border-solid"></div>
-        <p className="mt-4 text-xl font-medium text-gray-600">영화를 불러오는 중입니다... 🍿</p>
+        <p className="mt-4 text-xl font-medium text-gray-600">영화를 불러오는 중입니다.</p>
       </div>
     );
   }
@@ -43,7 +43,7 @@ const MoviesPage = () => {
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <h2 className="text-2xl font-bold text-red-500">앗! 데이터를 가져오지 못했어요. 😭</h2>
+        <h2 className="text-2xl font-bold text-red-500">데이터 로딩 실패.</h2>
         <p className="text-gray-500 mt-2">네트워크 연결을 확인하거나 나중에 다시 시도해주세요.</p>
       </div>
     );
