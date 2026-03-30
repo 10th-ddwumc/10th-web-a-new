@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import type { Movie, MovieResponse } from "../types/movie.ts";
+import type { Movie } from "../types/movie";
 import MovieCard from "../components/MovieCard";
 import { useParams } from "react-router-dom";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import { getMoviesByCategory } from "../api/movie";
 
 export default function MoviePage() {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -11,30 +11,24 @@ export default function MoviePage() {
   const [isError, setIsError] = useState(false);
   const [page, setPage] = useState(1);
 
-  const { category } = useParams<{
-    category: string;
-  }>();
+  const { category } = useParams<{ category: string }>();
 
   useEffect(() => {
     setPage(1);
+    setMovies([]);
   }, [category]);
 
   useEffect(() => {
     const fetchMovies = async () => {
+      if (!category) return;
+
       setIsPending(true);
+      setIsError(false);
 
       try {
-        const { data } = await axios.get<MovieResponse>(
-          `https://api.themoviedb.org/3/movie/${category}?language=ko-KR&page=${page}`,
-          {
-            headers: {
-              Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}`,
-            },
-          },
-        );
-
+        const data = await getMoviesByCategory(category, page);
         setMovies(data.results);
-      } catch {
+      } catch (error) {
         setIsError(true);
       } finally {
         setIsPending(false);
@@ -51,6 +45,7 @@ export default function MoviePage() {
       </div>
     );
   }
+
   return (
     <>
       <div className="flex items-center justify-center gap-6 mt-6">
@@ -78,7 +73,7 @@ export default function MoviePage() {
           shadow-sm
           hover:bg-gray-200 hover:text-black hover:shadow
           active:scale-95 active:shadow-inner
-          transition-all duration-150 disabled:opacity-30"
+          transition-all duration-150"
         >
           {">"}
         </button>
@@ -93,7 +88,7 @@ export default function MoviePage() {
       {!isPending && (
         <div
           className="p-10 grid gap-4 grid-cols-2 sm:grid-cols-3
-        md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+          md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
         >
           {movies.map((movie) => (
             <MovieCard key={movie.id} movie={movie} />
