@@ -1,0 +1,124 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    font-family: 'Roboto', sans-serif;
+    display:flex; /*주축이 가로*/
+    justify-content: center;
+    align-items: center;
+
+    height: 100vh;
+    background: #f1f1f1;
+}
+
+.todo-container{
+    background: white;
+    padding: 20px;
+    border-radius: 12px; /*모서리를 둥글게*/
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); /*그림자 효과*/
+    width: 350px;
+    text-align: center;
+}
+
+.todo-container__header{
+    font-size: 24px;
+    margin-bottom: 16px;
+}
+
+.todo-container__form{
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.todo-container__input{
+    flex: 1; /*남은 공간을 모두 차지*/
+    padding: 8px; /*내부 여백*/
+    border: 1px solid #ccc; /*테두리 색상*/
+    border-radius: 6px; /*모서리를 둥글게*/
+    font-size: 14px;
+}
+
+.todo-container__button{
+    background-color: #28a745; /*녹색 배경*/
+    color: white; /*글자 색상*/
+    border: none; /*테두리 제거*/
+    padding: 8px 12px; /*내부 여백*/
+
+    cursor: pointer; /*마우스 커서 변경*/
+    border-radius: 6px; /*모서리를 둥글게*/
+    transition: background-color 0.3s ease; /*배경색 변화에 애니메이션 효과*/
+}
+
+.todo-container__button:hover{
+    background-color: #218838; /*버튼 호버 시 색변화/ transition동작되도록*/
+}
+
+.render-container{
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.render-container__title{
+    font-size: 18px;
+    margin-bottom: 10px;
+
+    display: flex;
+    justify-content: center;
+    
+}
+
+.render-container__section{
+    width: 100%;
+    text-align: left;
+
+}
+
+.render-container__title{
+    font-size: 18px;
+    margin-bottom: 10px;
+
+    display: flex;
+    justify-content: center;
+}
+
+.render-container__list{
+    list-style: none; /*기본 리스트 스타일 제거*/
+    padding: 0;
+    margin: 0;
+}
+
+.render-container__item{
+    display: flex; /*주축이 가로*/
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    width: 100%;
+}
+
+.render-container__item-text{
+    flex: 1; /*남은 공간을 모두 차지*/
+}
+
+.render-container__item-button{
+    background-color: #dc3545; /*빨간색 배경*/
+    color: white; /*글자 색상*/
+    border: none; /*테두리 제거*/
+    padding: 6px 10px; /*내부 여백*/
+    cursor: pointer; /*마우스 커서 변경*/
+    border-radius: 6px; /*모서리를 둥글게*/
+    font-size: 12px;
+    transition: background-color 0.3s ease; /*배경색 변화에 애니메이션 효과*/
+}
+
+.render-container__item-button:hover{
+    background-color: #c82333; /*버튼 호버 시 색변화/ transition동작되도록*/
+}
