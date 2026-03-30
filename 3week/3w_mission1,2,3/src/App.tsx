@@ -1,9 +1,10 @@
 import './App.css';
 import HomePage from './pages/HomePage';
 import MoviePage from './pages/MoviePage';
-import { createBrowserRouter, Router, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import NotFoundPage from './pages/NotFoundPage';
-import { MovieDetailPage } from './pages/MovieDetailPage';
+import MovieDetailPage from './pages/MovieDetailPage';
+import HomeContent from './pages/HomeContent';
 
 //createBrowserRouter v6 -> 이걸 기준으로 함
 //react-router-dom v7(next/js, remix)
@@ -14,11 +15,15 @@ const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
     children: [
       {
+        index: true, // path: '' 와 동일한 의미, 기본 자식으로 설정
+        element: <HomeContent />,
+      },
+      {
         path: 'movies/:category',
         element: <MoviePage />,
       },
       {
-        path: 'movies/:movieId',
+        path: 'movies/detail/:movieId',
         element: <MovieDetailPage />,
       }
     ],
