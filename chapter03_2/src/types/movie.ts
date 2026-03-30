@@ -1,6 +1,6 @@
 
 export type Movie = {
-    audlt : boolean;
+    adult : boolean;
     backdrop_path: string;
     genre_ids: number[];
     id: number;
@@ -19,6 +19,6 @@ export type Movie = {
 export type MovieResponse = {
     page: number,
     results: [];
-    total_Pages: number,
+    total_pages: number,
     total_results: number
 };
