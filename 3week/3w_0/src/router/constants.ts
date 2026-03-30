@@ -1,0 +1,1 @@
+export const PUSHSTATE_EVENT = 'pushstate';
