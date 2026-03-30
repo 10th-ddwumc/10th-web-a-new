@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from 'axios';
 import type { Movie, MovieResponse } from "../types/movie";
-import MovieCard from "../componentss/MovieCard";
-import { LoadingSpinner } from "../componentss/LoadingSpinner";
+import MovieCard from "../components/MovieCard";
+import { LoadingSpinner } from "../components/LoadingSpinner";
 import { useParams } from "react-router-dom";
 
 export default function MoviePage() {
