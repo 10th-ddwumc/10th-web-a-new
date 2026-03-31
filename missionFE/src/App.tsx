@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import './App.css';
+import SignUpPage from './pages/SignUpPage';
 
 const Home = () => {
   return (
@@ -21,9 +22,13 @@ const Home = () => {
         >
           로그인 시작하기
         </Link>
-        <button className="w-full py-4 border border-gray-700 rounded-full font-bold text-center text-lg hover:bg-gray-900 transition-colors">
+        {/* 🟢 수정: button을 Link로 바꾸어 /signup 연결 */}
+        <Link 
+          to="/signup" 
+          className="w-full py-4 border border-gray-700 rounded-full font-bold text-center text-lg hover:bg-gray-900 transition-colors"
+        >
           회원가입
-        </button>
+        </Link>
       </div>
       
       <footer className="mt-20 text-gray-600 text-xs tracking-widest uppercase">
@@ -44,7 +49,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (email.length > 0 && (!email.includes('@') || !email.includes('.'))) {
-      setEmailError('유효하지 않은 이메일 형식입니다.');
+      setEmailError('올바르지 않은 이메일 형식입니다.');
     } else {
       setEmailError('');
     }
@@ -52,13 +57,12 @@ const LoginPage = () => {
     if (password.length > 0 && password.length < 6) {
       passwordError === '' && setPasswordError('비밀번호는 최소 6자 이상이어야 합니다.');
     } else if (password.length >= 6 || password.length === 0) {
-      setPasswordError('');
+      passwordError === '' || setPasswordError('');
     }
 
-   
     const isValid = email.includes('@') && email.includes('.') && password.length >= 6;
     setIsFormValid(isValid);
-  }, [email, password]);
+  }, [email, password, passwordError]);
 
   return (
     <div className="min-h-screen bg-black text-white font-sans">
@@ -74,28 +78,29 @@ const LoginPage = () => {
           <button onClick={() => navigate('/login')} className="px-4 py-1.5 text-sm font-bold text-white bg-[#1a1a1a] rounded-lg hover:bg-gray-800 transition-colors">
             로그인
           </button>
-          <button className="px-4 py-1.5 text-sm font-bold text-white bg-[#ff007a] rounded-lg">
+          {/* 🟢 수정: onClick 이벤트에 navigate('/signup') 추가 */}
+          <button 
+            onClick={() => navigate('/signup')} 
+            className="px-4 py-1.5 text-sm font-bold text-white bg-[#ff007a] rounded-lg hover:bg-[#e6006e] transition-colors"
+          >
             회원가입
           </button>
         </div>
       </nav>
 
       <div className="max-w-md mx-auto pt-10 px-6">
-       
         <button 
           onClick={() => navigate(-1)} 
           className="mb-8 text-gray-400 hover:text-white flex items-center gap-2 group transition-colors"
         >
           <span className="text-2xl group-hover:-translate-x-1 transition-transform">←</span>
-          
+          <span className="font-medium text-lg italic">Back</span>
         </button>
 
-    
         <div className="flex flex-col items-center bg-[#0a0a0a] p-10 rounded-3xl border border-gray-900 shadow-2xl">
           <h2 className="text-3xl font-bold mb-10 text-white tracking-tight">로그인</h2>
           
           <div className="w-full space-y-5">
-      
             <button className="w-full py-4 border border-gray-700 rounded-2xl flex items-center justify-center gap-3 hover:bg-gray-900 transition-colors">
               <img src="https://authjs.dev/img/providers/google.svg" alt="Google" className="w-5 h-5" />
               <span className="font-semibold text-white">구글 로그인</span>
@@ -107,7 +112,6 @@ const LoginPage = () => {
               <div className="flex-grow border-t border-gray-800"></div>
             </div>
 
-      
             <div className="space-y-2">
               <input 
                 type="text" 
@@ -119,7 +123,6 @@ const LoginPage = () => {
               {emailError && <p className="text-red-500 text-xs pl-2 animate-pulse">{emailError}</p>}
             </div>
 
-        
             <div className="space-y-2">
               <input 
                 type="password" 
@@ -131,7 +134,6 @@ const LoginPage = () => {
               {passwordError && <p className="text-red-500 text-xs pl-2 animate-pulse">{passwordError}</p>}
             </div>
 
-          
             <button 
               disabled={!isFormValid}
               className={`w-full py-4 mt-4 rounded-2xl font-bold text-lg transition-all active:scale-[0.98] ${
@@ -156,6 +158,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
       </Routes>
     </BrowserRouter>
   );
