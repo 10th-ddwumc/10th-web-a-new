@@ -70,7 +70,6 @@ const MovieDetailPage = () => {
   return (
     <div className="min-h-screen bg-black text-white">
       
-      {/* 상단 섹션 */}
       <div className="relative p-8 md:p-16 flex flex-col md:flex-row gap-12 items-center">
         <img 
           src={`https://image.tmdb.org/t/p/w500${movieDetail?.poster_path}`} 
