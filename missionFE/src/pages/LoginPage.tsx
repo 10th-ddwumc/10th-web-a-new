@@ -1,8 +1,8 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-
 
 const loginSchema = z.object({
   email: z
@@ -18,7 +18,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  
+  const [showPw, setShowPw] = useState(false); // 비밀번호 보기 상태
   
   const { 
     register, 
@@ -37,7 +37,7 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans">
-    
+      {/* --- 상단 네비게이션 --- */}
       <nav className="w-full bg-black border-b border-gray-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div 
           onClick={() => navigate('/')} 
@@ -46,17 +46,16 @@ const LoginPage = () => {
           돌려돌려LP판
         </div>
         <div className="flex gap-3">
-          <button onClick={() => navigate('/login')} className="px-4 py-1.5 text-sm font-bold text-white bg-[#1a1a1a] rounded-lg hover:bg-gray-800 transition-colors">
+          <button onClick={() => navigate('/login')} className="px-4 py-1.5 text-sm font-bold text-white bg-[#1a1a1a] rounded-lg">
             로그인
           </button>
-          <button onClick={() => navigate('/signup')} className="px-4 py-1.5 text-sm font-bold text-white bg-[#ff007a] rounded-lg hover:bg-[#e6006e] transition-colors">
+          <button onClick={() => navigate('/signup')} className="px-4 py-1.5 text-sm font-bold text-white bg-[#ff007a] rounded-lg">
             회원가입
           </button>
         </div>
       </nav>
 
       <div className="max-w-md mx-auto pt-10 px-6">
-       
         <button 
           onClick={() => navigate(-1)} 
           className="mb-8 text-gray-400 hover:text-white transition-colors flex items-center gap-2 group"
@@ -65,15 +64,13 @@ const LoginPage = () => {
           <span className="font-medium">뒤로가기</span>
         </button>
 
-       
         <form 
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col items-center bg-[#0a0a0a] p-10 rounded-3xl border border-gray-900 shadow-2xl"
         >
-          <h2 className="text-3xl font-bold mb-10 text-white tracking-tight">로그인</h2>
+          <h2 className="text-3xl font-bold mb-10 text-white tracking-tight text-center w-full">로그인</h2>
           
           <div className="w-full space-y-5">
-            
             <button type="button" className="w-full py-4 border border-gray-700 rounded-2xl flex items-center justify-center gap-3 hover:bg-gray-900 transition-colors">
               <img src="https://authjs.dev/img/providers/google.svg" alt="Google" className="w-5 h-5" />
               <span className="font-semibold text-white">구글 로그인</span>
@@ -85,7 +82,7 @@ const LoginPage = () => {
               <div className="flex-grow border-t border-gray-800"></div>
             </div>
 
-          
+            {/* 이메일 입력 */}
             <div className="space-y-2">
               <input 
                 {...register("email")} 
@@ -94,28 +91,37 @@ const LoginPage = () => {
                 className={`w-full p-4 bg-[#141414] border ${errors.email ? 'border-red-500' : 'border-gray-800'} rounded-2xl focus:border-[#ff007a] outline-none transition-all placeholder:text-gray-600`}
               />
               {errors.email && (
-                <p className="text-red-500 text-xs pl-2 animate-pulse">
-                  {errors.email.message}
-                </p>
+                <p className="text-red-500 text-xs pl-2 animate-pulse">{errors.email.message}</p>
               )}
             </div>
 
-           
+            {/* 비밀번호 입력 (토글 아이콘 포함) */}
             <div className="space-y-2">
-              <input 
-                {...register("password")} 
-                type="password" 
-                placeholder="비밀번호를 입력해주세요!" 
-                className={`w-full p-4 bg-[#141414] border ${errors.password ? 'border-red-500' : 'border-gray-800'} rounded-2xl focus:border-[#ff007a] outline-none transition-all placeholder:text-gray-600`}
-              />
+              <div className="relative w-full">
+                <input 
+                  {...register("password")} 
+                  type={showPw ? "text" : "password"} 
+                  placeholder="비밀번호를 입력해주세요!" 
+                  // pr-14로 아이콘 공간 확보 + 자동완성 배경색 커스텀
+                  className={`w-full p-4 pr-14 bg-[#141414] border ${errors.password ? 'border-red-500' : 'border-gray-800'} rounded-2xl focus:border-[#ff007a] outline-none transition-all placeholder:text-gray-600 autofill:shadow-[0_0_0_30px_#141414_inset] autofill:text-fill-white`}
+                />
+                {/* 👁️ 아이콘 버튼 (z-index와 pointer-events로 강제 노출) */}
+                <button 
+                  type="button" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowPw(!showPw);
+                  }} 
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-xl z-50 cursor-pointer p-1 hover:scale-110 transition-transform select-none active:opacity-50"
+                >
+                  {showPw ? "🙈" : "👁️"}
+                </button>
+              </div>
               {errors.password && (
-                <p className="text-red-500 text-xs pl-2 animate-pulse">
-                  {errors.password.message}
-                </p>
+                <p className="text-red-500 text-xs pl-2 animate-pulse">{errors.password.message}</p>
               )}
             </div>
 
-            
             <button 
               type="submit" 
               disabled={!isValid} 
