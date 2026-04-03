@@ -4,6 +4,7 @@ import type { Movie, MovieResponse } from "../types/movie";
 import MovieCard from "../components/MovieCard";
 import { LoadingSpinner } from "../components/LoadingSpinner";
 import { useParams } from "react-router-dom";
+import { movieApi } from '../App';
 
 export default function MoviePage() {
 
@@ -23,16 +24,18 @@ export default function MoviePage() {
         const fetchMovies = async () => {
             setIsPending(true);
             try {
-                const { data } = await axios.get<MovieResponse>(
-                    `https://api.themoviedb.org/3/movie/${category}?language=ko-KR&page=${page}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}`,
-
-                        },
-                    }
+                const { data } = await movieApi.get<MovieResponse>(
+                    `/${category}?language=ko-KR&page=${page}`
                 );
+                // const { data } = await axios.get<MovieResponse>(
+                //     `https://api.themoviedb.org/3/movie/${category}?language=ko-KR&page=${page}`,
+                //     {
+                //         headers: {
+                //             Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}`,
 
+                //         },
+                //     }
+                // );
 
                 setMovies(data.results);
                 //const fetchMovies: () => Promise<void>
@@ -48,7 +51,7 @@ export default function MoviePage() {
         };
 
         fetchMovies();
-    }, [page, category]);
+    }, [category]);
 
     if (isError) {
         return <div>
@@ -87,7 +90,7 @@ export default function MoviePage() {
             {!isPending && (
                 <div className='p-10 grid gap-6 grid-cols-2 sm:grid-cols-3 
                 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6'>
-                    {movies && movies.map((movie) => (
+                    {movies.map((movie) => (
                         <MovieCard key={movie.id} movie={movie} />
                     ))}
                 </div>

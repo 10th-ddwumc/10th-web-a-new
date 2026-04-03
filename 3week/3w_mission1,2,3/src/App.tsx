@@ -5,6 +5,15 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import NotFoundPage from './pages/NotFoundPage';
 import MovieDetailPage from './pages/MovieDetailPage';
 import HomeContent from './pages/HomeContent';
+import axios from 'axios';
+
+// 피드백 : 공통 설정을 가진 axios 인스턴스 생성
+export const movieApi = axios.create({
+  baseURL: 'https://api.themoviedb.org/3/movie',
+  headers: {
+    Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}`,
+  },
+});
 
 //createBrowserRouter v6 -> 이걸 기준으로 함
 //react-router-dom v7(next/js, remix)

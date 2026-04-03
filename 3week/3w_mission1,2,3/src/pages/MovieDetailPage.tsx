@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import type { MovieDetail, CreditResponse, Cast } from '../types/movie';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { movieApi } from '../App';
 
 const MovieDetailPage = () => {
     const { movieId } = useParams<{ movieId: string }>();
@@ -16,13 +17,17 @@ const MovieDetailPage = () => {
             setIsPending(true);
             try {
                 const [detailRes, creditRes] = await Promise.all([
-                    axios.get<MovieDetail>(`https://api.themoviedb.org/3/movie/${movieId}?language=ko-KR`, {
-                        headers: { Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}` }
-                    }),
-                    axios.get<CreditResponse>(`https://api.themoviedb.org/3/movie/${movieId}/credits?language=ko-KR`, {
-                        headers: { Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}` }
-                    })
+                    movieApi.get<MovieDetail>(`/${movieId}?language=ko-KR`),
+                    movieApi.get<CreditResponse>(`/${movieId}/credits?language=ko-KR`)
                 ]);
+                // const [detailRes, creditRes] = await Promise.all([
+                //     axios.get<MovieDetail>(`https://api.themoviedb.org/3/movie/${movieId}?language=ko-KR`, {
+                //         headers: { Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}` }
+                //     }),
+                //     axios.get<CreditResponse>(`https://api.themoviedb.org/3/movie/${movieId}/credits?language=ko-KR`, {
+                //         headers: { Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}` }
+                //     })
+                // ]);
 
                 setMovie(detailRes.data);
                 setCast(creditRes.data.cast);

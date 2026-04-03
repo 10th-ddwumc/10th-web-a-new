@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import type { Movie, MovieResponse } from '../types/movie';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { movieApi } from '../App';
 
 const HomeHighlightCard = ({ movie }: { movie: Movie }) => {
     const navigate = useNavigate();
@@ -48,18 +49,24 @@ const HomeContent = () => {
             setIsPending(true);
             setIsError(false);
             try {
-                // 인기, 평점높은, 개봉예정 3개 API 동시 호출
+                // 피드백 반영: baseURL과 header 이미 설정된 movieApi 인스턴스 사용
                 const [popularRes, topRatedRes, upcomingRes] = await Promise.all([
-                    axios.get<MovieResponse>(`https://api.themoviedb.org/3/movie/popular?language=ko-KR&page=1`, {
-                        headers: { Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}` }
-                    }),
-                    axios.get<MovieResponse>(`https://api.themoviedb.org/3/movie/top_rated?language=ko-KR&page=1`, {
-                        headers: { Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}` }
-                    }),
-                    axios.get<MovieResponse>(`https://api.themoviedb.org/3/movie/upcoming?language=ko-KR&page=1`, {
-                        headers: { Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}` }
-                    })
+                    movieApi.get<MovieResponse>(`/popular?language=ko-KR&page=1`),
+                    movieApi.get<MovieResponse>(`/top_rated?language=ko-KR&page=1`),
+                    movieApi.get<MovieResponse>(`/upcoming?language=ko-KR&page=1`)
                 ]);
+                // 인기, 평점높은, 개봉예정 3개 API 동시 호출
+                // const [popularRes, topRatedRes, upcomingRes] = await Promise.all([
+                //     axios.get<MovieResponse>(`https://api.themoviedb.org/3/movie/popular?language=ko-KR&page=1`, {
+                //         headers: { Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}` }
+                //     }),
+                //     axios.get<MovieResponse>(`https://api.themoviedb.org/3/movie/top_rated?language=ko-KR&page=1`, {
+                //         headers: { Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}` }
+                //     }),
+                //     axios.get<MovieResponse>(`https://api.themoviedb.org/3/movie/upcoming?language=ko-KR&page=1`, {
+                //         headers: { Authorization: `Bearer ${import.meta.env.VITE_TMDB_KEY}` }
+                //     })
+                // ]);
 
                 const firstMovies = [
                     popularRes.data.results[0],

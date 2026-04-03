@@ -40,8 +40,17 @@ export interface Cast {
     known_for_department: string;
 }
 
+//피드백 : any 대신 구체적인 Crew 인터페이스 정의
+export interface Crew {
+    id: number;
+    name: string;
+    job: string;
+    department: string;
+    profile_path: string | null;
+}
+
 export interface CreditResponse {
     id: number;
     cast: Cast[];
-    crew: any[];
+    crew: Crew[]; // 수정
 }
