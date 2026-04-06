@@ -1,6 +1,5 @@
 // src/pages/HomeContent.tsx
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import type { Movie, MovieResponse } from '../types/movie';
 import { LoadingSpinner } from '../components/LoadingSpinner';
