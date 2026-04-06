@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { Movie } from "../types/movie";
 import MovieCard from "../components/MovieCard";
 import { useParams } from "react-router-dom";
@@ -10,10 +10,6 @@ export default function MoviePage() {
   const [page, setPage] = useState(1);
 
   const { category } = useParams<{ category: string }>();
-
-  useEffect(() => {
-    setPage(1);
-  }, [category]);
 
   const { data, isPending, isError } = useCustomFetch(
     () => getMovies(category!, page),
