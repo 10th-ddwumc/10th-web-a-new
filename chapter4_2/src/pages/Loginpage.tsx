@@ -1,18 +1,26 @@
-import { useState } from "react";
 import useForm from "../hooks/useform";
 import { type UserSignInInformation, validateSignin } from "../utils/validate";
 
-const LoginpPage = () => {
+const LoginPage = () => {
 
     const{getInputProps, errors, touched, values} = useForm<UserSignInInformation>({
-        initaialValue: {
+        initialValue: {
             email: "",
             password: "",
         },
         validate: validateSignin,
     });
 
-    const handleSubmit = () => {};
+    const handleSubmit = () => {
+    try {
+        const response = await axios.post("https://api.example.com/login", values);
+        
+        localStorage.setItem("token", response.data.token);
+        navigate("/"); 
+    } catch (error) {
+        alert("이메일 또는 비밀번호가 틀렸습니다.");
+    }
+    };
 
     const isDisabled: boolean = 
     Object.values(errors||{}).some((error:string)=>error.length>0)||
@@ -56,4 +64,4 @@ const LoginpPage = () => {
     )
 };
 
-export default LoginpPage;
+export default LoginPage;
