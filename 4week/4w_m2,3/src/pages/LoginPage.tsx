@@ -1,7 +1,11 @@
 import { validateSignin, type UserSigninformaion } from "../utills/validate";
 import useForm from "../hooks/useForm";
+import { postSignin } from "../apis/auth";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+import { LOCAL_STORAGE_KEY } from "../constants/key";
 
 const LoginPage = () => {
+    const { setItem } = useLocalStorage(LOCAL_STORAGE_KEY.accessToken);
     const { values, errors, touched, getInputProps } = useForm<UserSigninformaion>({
         initialValues: {
             email: '',
@@ -11,9 +15,21 @@ const LoginPage = () => {
     });
 
     //const handleSubmit = async() => {
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         console.log(values);
+        try {
+            const response = await postSignin(values);
+            setItem(response.data.accessToken);
+            console.log(response);
+        } catch (error) {
+            if (error instanceof Error) {
+                alert(error.message);
+            } else {
+                alert("로그인 중 알 수 없는 오류가 발생했습니다.");
+            }
+        }
         //await axios.post("url", values)
+
     }
 
     const isDisabled =
