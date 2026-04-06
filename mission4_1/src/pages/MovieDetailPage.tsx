@@ -1,28 +1,6 @@
 import { useParams } from 'react-router-dom';
 import useCustomFetch from '../hooks/useCustomFetch';
-
-interface MovieDetail {
-  title: string;
-  overview: string;
-  poster_path: string;
-  backdrop_path: string;
-  vote_average: number;
-  release_date: string;
-  runtime: number;
-  tagline: string;
-  credits: {
-    cast: Cast[];
-    crew: Cast[];
-  };
-}
-
-interface Cast {
-  id: number;
-  name: string;
-  character?: string;
-  job?: string;
-  profile_path: string | null;
-}
+import type { MovieDetail } from '../types/movie'; // 'type' 키워드 필수
 
 const MovieDetailPage = () => {
   const { movieId } = useParams<{ movieId: string }>();
@@ -44,7 +22,6 @@ const MovieDetailPage = () => {
     </div>
   );
 
-  // 감독 찾기 및 출연진 리스트 정리
   const director = movieDetail.credits?.crew.find(person => person.job === 'Director');
   const castList = movieDetail.credits?.cast || [];
   
@@ -54,14 +31,19 @@ const MovieDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-
+   
       <div className="relative p-8 md:p-16 flex flex-col md:flex-row gap-12 items-center">
      
         <div className="absolute inset-0 z-0 opacity-20">
-            <img src={`https://image.tmdb.org/t/p/original${movieDetail.backdrop_path}`} className="w-full h-full object-cover" alt="bg" />
-            <div className="absolute inset-0 bg-black/80"></div>
+          <img 
+            src={`https://image.tmdb.org/t/p/original${movieDetail.backdrop_path}`} 
+            className="w-full h-full object-cover" 
+            alt="background" 
+          />
+          <div className="absolute inset-0 bg-black/80"></div>
         </div>
 
+  
         <img 
           src={`https://image.tmdb.org/t/p/w500${movieDetail.poster_path}`} 
           alt={movieDetail.title}
@@ -69,7 +51,9 @@ const MovieDetailPage = () => {
         />
 
         <div className="flex-1 z-10 space-y-6">
-          <h1 className="text-5xl md:text-6xl font-black text-pink-500 tracking-tight">{movieDetail.title}</h1>
+          <h1 className="text-5xl md:text-6xl font-black text-pink-500 tracking-tight">
+            {movieDetail.title}
+          </h1>
           
           <div className="flex items-center gap-6 text-xl font-medium text-gray-300">
             <span className="text-yellow-400">⭐ {movieDetail.vote_average.toFixed(1)}</span>
@@ -80,7 +64,9 @@ const MovieDetailPage = () => {
           </div>
 
           {movieDetail.tagline && (
-            <p className="text-2xl font-bold italic text-gray-100 border-l-4 border-pink-400 pl-4">"{movieDetail.tagline}"</p>
+            <p className="text-2xl font-bold italic text-gray-100 border-l-4 border-pink-400 pl-4">
+              "{movieDetail.tagline}"
+            </p>
           )}
 
           <p className="text-lg leading-relaxed text-gray-200 bg-gray-900 bg-opacity-50 p-6 rounded-xl shadow-inner">
@@ -90,7 +76,9 @@ const MovieDetailPage = () => {
       </div>
 
       <div className="px-8 md:px-16 pb-20">
-        <h2 className="text-3xl font-bold text-white mb-10 pb-3 border-b-2 border-pink-500">감독 / 출연</h2>
+        <h2 className="text-3xl font-bold text-white mb-10 pb-3 border-b-2 border-pink-500">
+          감독 / 출연
+        </h2>
         
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-x-6 gap-y-10 text-center">
           {combinedList.map((person, index) => (
