@@ -3,15 +3,23 @@ import useForm from "../hooks/useForm";
 import { postSignin } from "../apis/auth";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { LOCAL_STORAGE_KEY } from "../constants/key";
+import { useCallback } from "react"; // useCallback 임포트
 
 const LoginPage = () => {
     const { setItem } = useLocalStorage(LOCAL_STORAGE_KEY.accessToken);
+
+    // 피드백 반영: validate 함수가 렌더링 때마다 생성되어 useForm의 useEffect를 
+    // 불필요하게 실행하지 않도록 useCallback으로 메모이제이션합니다.
+    const memoizedValidate = useCallback((values: UserSigninformaion) => {
+        return validateSignin(values);
+    }, []);
+
     const { values, errors, touched, getInputProps } = useForm<UserSigninformaion>({
         initialValues: {
             email: '',
             password: '',
         },
-        validate: validateSignin,
+        validate: memoizedValidate, // 메모이제이션된 함수 전달
     });
 
     //const handleSubmit = async() => {
@@ -80,5 +88,4 @@ const LoginPage = () => {
         </div>
     )
 }
-
 export default LoginPage;

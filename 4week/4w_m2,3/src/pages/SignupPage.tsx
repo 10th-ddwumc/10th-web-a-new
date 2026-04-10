@@ -17,7 +17,7 @@ const schema = z.object({
 
 type FormFields = z.infer<typeof schema>;
 
-const SingupPage = () => {
+const SignupPage = () => {
     const navigate = useNavigate();
     // 단계별 입력을 위한 상태 (1: 이메일, 2: 비밀번호, 3: 닉네임)
     const [step, setStep] = useState(1);
@@ -263,4 +263,4 @@ const SingupPage = () => {
     )*/
 }
 
-export default SingupPage;
+export default SignupPage;

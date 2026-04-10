@@ -4,8 +4,8 @@ import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import LoginPage from './pages/LoginPage';
 import HomeLayout from './layouts/HomeLayout';
-import SingupPage from './pages/SingupPage';
 import MyPage from './pages/MyPage';
+import SignupPage from './pages/SignupPage';
 
 
 //1. 홈페이지
@@ -21,7 +21,7 @@ const router = createBrowserRouter([
       // index: true = path: '/'와 같은 의미 
       { index: true, element: <HomePage /> },
       { path: 'login', element: <LoginPage /> },
-      { path: 'signup', element: <SingupPage /> },
+      { path: 'signup', element: <SignupPage /> },
       { path: 'my', element: <MyPage /> }
     ]
   },

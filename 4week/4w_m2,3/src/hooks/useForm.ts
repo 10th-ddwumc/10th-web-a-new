@@ -28,26 +28,20 @@ function useForm<T>({ initialValues, validate }: UseFormProps<T>) {
 
     //이메일 인풋, 패스워드 인풋, 속성들을 좀 가져오는 것
     const getInputProps = (name: keyof T) => {
-        const value = values[name]; //현재 필드의 값
-        const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-            handleChange(name, e.target.value); //onChange 이벤트 핸들러. 입력값이 바뀔 때마다 handleChange 함수 호출
-
-        const onBlur = () => handleBlur(name); //onBlur 이벤트 핸들러. 필드에서 포커스가 벗어날 때마다 handleBlur 함수 호출
-
         return {
-            value,
-            onChange,
-            onBlur,
+            value: values[name],
+            onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+                handleChange(name, e.target.value),
+            onBlur: () => handleBlur(name),
         };
     }
     //value가 변경될 때 마다 에러 검증 로직이 실행됨
     //{email: ''}
     useEffect(() => {
         const newErrors = validate(values); //현재 입력값에 대한 유효성 검사 실행
-        setErrors(newErrors); //검증 결과를 errors 상태에 저장, 오류메세지 업뎃
+        setErrors(newErrors);//검증 결과를 errors 상태에 저장, 오류메세지 업뎃
 
-    }, [values, validate])
-
+    }, [values, validate]);
     return { values, errors, touched, getInputProps };
 
 }
