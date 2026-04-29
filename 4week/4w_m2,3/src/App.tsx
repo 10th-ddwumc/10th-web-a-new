@@ -7,6 +7,7 @@ import HomeLayout from './layouts/HomeLayout';
 import MyPage from './pages/MyPage';
 import SignupPage from './pages/SignupPage';
 import ProtectedLayout from './layouts/ProtectedLayout';
+import GoogleLoginRedirectPage from './pages/GoogleLoginRedirectPage';
 
 
 //1. 홈페이지
@@ -23,6 +24,7 @@ const publicRoutes: RouteObject[] = [{
     { index: true, element: <HomePage /> },
     { path: 'login', element: <LoginPage /> },
     { path: 'signup', element: <SignupPage /> },
+    { path: "v1/auth/google/callback", element: <GoogleLoginRedirectPage /> },
   ]
 },
 ];

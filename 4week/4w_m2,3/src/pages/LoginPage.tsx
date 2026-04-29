@@ -50,6 +50,11 @@ const LoginPage = () => {
 
     }
 
+    const hadleGoogleLogin = () => {
+        //구글 로그인 로직 구현
+        window.location.href = import.meta.env.VITE_SERVER_API_URL + "/v1/auth/google/login";
+    }
+
     const isDisabled =
         Object.values(errors || {}).some((error) => error && error.length > 0) || //오류가 있으면 true
         Object.values(values).some((value) => value === ''); //값이 빈 문자열인 필드가 있으면 true
@@ -105,6 +110,17 @@ const LoginPage = () => {
                     >
                         로그인
                     </button>
+                    <button
+                        type="button"
+                        onClick={hadleGoogleLogin}
+                        className={`w-full py-3 rounded-md text-lg font-medium transition-colors `}
+                    >
+                        <div className="flex items-center justify-center gap-3">
+                            <img src={"/images/google.svg"} alt="Google Icon" />
+                            <span>구글 로그인</span>
+                        </div>
+                    </button>
+
                 </div>
             </div>
         </div>
