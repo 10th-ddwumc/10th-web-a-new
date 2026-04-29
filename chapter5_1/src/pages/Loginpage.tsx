@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 const LoginPage = () => {
     const {login} = useAuth();
  
+
     const {setItem} = useLocalstorage(LOCAL_STORAGE_KEY.accessToken);
     const{getInputProps, errors, touched, values} = useForm<UserSignInInformation>({
         initaialValue: {
@@ -19,6 +20,11 @@ const LoginPage = () => {
     const handleSubmit = async() => {
     await login(values);
     }; 
+    //구글로그인 추가
+    const handleGoogleLogin = () => {
+        const serverUrl = import.meta.env.VITE_SERVER_API_URL;
+        window.location.href = `${serverUrl}/v1/auth/google/login`;
+    };
 
     const isDisabled: boolean = 
     Object.values(errors||{}).some((error:string)=>error.length>0)||
@@ -55,8 +61,17 @@ const LoginPage = () => {
                 disabled={isDisabled}
                 className="w-full bg-blue-600 text-white py-3 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors cursor-pointer disabled:bg-gray-300"
                 >
-                    로그인
+                로그인
                 </button>
+                <button
+                onClick={handleGoogleLogin}
+                disabled={isDisabled}
+                type="button"
+                className="w-full flex items-center justify-center gap-3 bg-white text-black py-3 rounded-md text-lg font-medium border border-gray-300 hover:bg-gray-100 transition-colors cursor-pointer"
+                >
+                <img src=".\src\google.png" alt="구글 로고" className="w-6 h-auto" />
+                <span>구글 로그인</span>
+            </button>
             </div>
         </div>
     )
