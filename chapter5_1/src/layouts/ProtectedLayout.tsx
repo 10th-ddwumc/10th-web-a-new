@@ -1,8 +1,8 @@
-import { Outlet, replace, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const ProtectedLayout=()=>{
-    const[accessToken] = useAuth();
+    const{accessToken} = useAuth();
     const location = useLocation();
 
     if(!accessToken){
