@@ -10,7 +10,7 @@ const LoginPage = () => {
 
     useEffect(() => {
         if (accessToken) {
-            navigate("/login");
+            navigate("/my");
         }
     }, [accessToken, navigate]);
     //const { setItem } = useLocalStorage(LOCAL_STORAGE_KEY.accessToken);
@@ -32,7 +32,8 @@ const LoginPage = () => {
     //const handleSubmit = async() => {
     const handleSubmit = async () => {
         await login(values);
-        navigate("/my");
+        //navigate("/my");
+
         // console.log(values);
         // try {
         //     const response = await postSignin(values);
@@ -98,8 +99,8 @@ const LoginPage = () => {
                         onClick={handleSubmit}
                         disabled={isDisabled}
                         className={`w-full py-3 rounded-md text-lg font-medium transition-colors ${isDisabled
-                                ? "bg-gray-400 text-black cursor-not-allowed"
-                                : "bg-[#627550] text-black hover:opacity-90 cursor-pointer"
+                            ? "bg-gray-400 text-black cursor-not-allowed"
+                            : "bg-[#627550] text-black hover:opacity-90 cursor-pointer"
                             }`}
                     >
                         로그인
