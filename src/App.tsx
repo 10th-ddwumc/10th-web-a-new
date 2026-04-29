@@ -1,7 +1,8 @@
-// src/App.tsx
 import { useState } from 'react';
 import { api } from './api';
 import googleLogo from './assets/googleLogo.png';
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function App() {
   const [email, setEmail] = useState('');
@@ -25,10 +26,9 @@ function App() {
     } catch (e) { alert("로그인 실패"); }
   };
 
-  // ⭐️ 3. 구글 소셜 로그인 (추가된 함수)
-const handleGoogleLogin = () => {
-    // v1을 빼고, 뒤에 /login을 붙여야 합니다!
-    window.location.href = 'http://localhost:8000/v1/auth/google/login';
+  // 3. 구글 로그인
+  const handleGoogleLogin = () => {
+    window.location.href = `${BASE_URL}/auth/google/login`;
   };
 
   // 4. 데이터 요청 (테스트 버튼)
@@ -46,16 +46,15 @@ const handleGoogleLogin = () => {
       <input type="password" placeholder="비밀번호" onChange={e => setPassword(e.target.value)} /><br/>
       <button onClick={handleSignUp}>회원가입</button>
       <button onClick={handleLogin}>로그인</button>
-      
-      {/* ⭐️ 구글 로그인 버튼 추가 */}
+
       <div style={{ marginTop: '10px' }}>
-        <button 
-          onClick={handleGoogleLogin} 
-          style={{ 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            gap: '10px', 
-            padding: '8px 16px', 
+        <button
+          onClick={handleGoogleLogin}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '8px 16px',
             cursor: 'pointer',
             background: 'white',
             border: '1px solid #ccc',
@@ -74,4 +73,5 @@ const handleGoogleLogin = () => {
     </div>
   );
 }
+
 export default App;
