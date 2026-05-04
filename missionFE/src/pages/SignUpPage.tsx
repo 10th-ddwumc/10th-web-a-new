@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm, type UseFormRegisterReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-
+import Navbar from '../components/Navbar';
 import useLocalStorage from '../hooks/useLocalStorage';
 import type { UserInfo } from '../types/signup';
 
@@ -98,15 +98,8 @@ const SignUpPage = () => {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans">
-      <nav className="w-full bg-black border-b border-gray-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-        <div onClick={() => navigate('/')} className="text-[#ff007a] text-xl font-black italic cursor-pointer select-none hover:opacity-80 transition-opacity">
-          돌려돌려LP판
-        </div>
-        <div className="flex gap-3">
-          <button onClick={() => navigate('/login')} className="px-4 py-1.5 text-sm font-bold text-white bg-[#1a1a1a] rounded-lg hover:bg-gray-800 transition-colors">로그인</button>
-          <button onClick={() => navigate('/signup')} className="px-4 py-1.5 text-sm font-bold text-white bg-[#ff007a] rounded-lg hover:bg-[#e6006e] transition-colors">회원가입</button>
-        </div>
-      </nav>
+      <Navbar />
+     
 
       <div className="max-w-md mx-auto pt-10 px-6 pb-20">
         <form onSubmit={handleSubmit(onSubmit)}>

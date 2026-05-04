@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 const cache = new Map<string, { data: unknown; timestamp: number }>();
 
@@ -6,6 +6,7 @@ interface UseCustomQueryOptions<T> {
   queryKey: string[];
   queryFn: () => Promise<T>;
   staleTime?: number;
+  gcTime?: number; // ✅ gcTime 추가
   retry?: number;
 }
 
@@ -13,6 +14,7 @@ function useCustomQuery<T>({
   queryKey,
   queryFn,
   staleTime = 0,
+  gcTime = 1000 * 60 * 5, // ✅ 기본값 5분
   retry = 1,
 }: UseCustomQueryOptions<T>) {
   const key = queryKey.join("-");
@@ -22,53 +24,57 @@ function useCustomQuery<T>({
   const [error, setError] = useState<Error | null>(null);
   const retryCount = useRef(0);
   const queryFnRef = useRef(queryFn);
-  
-  queryFnRef.current = queryFn; 
 
-  useEffect(() => {
-    let cancelled = false;
+  queryFnRef.current = queryFn;
+
+  const fetchData = useCallback(async () => {
     retryCount.current = 0;
 
-    const fetchData = async () => {
-      const cached = cache.get(key);
-      if (cached && Date.now() - cached.timestamp < staleTime) {
-        setData(cached.data as T);
+    const cached = cache.get(key);
+    if (cached && Date.now() - cached.timestamp < staleTime) {
+      setData(cached.data as T);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setIsError(false);
+
+    while (retryCount.current <= retry) {
+      try {
+        const result = await queryFnRef.current();
+        cache.set(key, { data: result, timestamp: Date.now() });
+        setData(result);
         setIsLoading(false);
         return;
-      }
-
-      setIsLoading(true);
-      setIsError(false);
-
-      while (retryCount.current <= retry) {
-        try {
-          const result = await queryFnRef.current();
-          if (!cancelled) {
-            cache.set(key, { data: result, timestamp: Date.now() });
-            setData(result);
-            setIsLoading(false);
-          }
+      } catch (err) {
+        retryCount.current += 1;
+        console.log(`재시도 중... (${retryCount.current}/${retry})`);
+        if (retryCount.current > retry) {
+          setIsError(true);
+          setError(err as Error);
+          setIsLoading(false);
           return;
-        } catch (err) {
-          retryCount.current += 1;
-          console.log(`재시도 중... (${retryCount.current}/${retry})`);
-          if (retryCount.current > retry) {
-            if (!cancelled) {
-              setIsError(true);
-              setError(err as Error);
-              setIsLoading(false);
-            }
-            return;
-          }
         }
       }
-    };
-
-    fetchData();
-    return () => { cancelled = true; };
+    }
   }, [key, staleTime, retry]);
 
-  return { data, isLoading, isError, error };
+  useEffect(() => {
+    fetchData();
+
+    // ✅ gcTime 후 캐시 삭제
+    const gcTimer = setTimeout(() => {
+      cache.delete(key);
+      console.log(`캐시 삭제됨: ${key}`);
+    }, gcTime);
+
+    return () => {
+      clearTimeout(gcTimer);
+    };
+  }, [fetchData, gcTime, key]);
+
+  return { data, isLoading, isError, error, refetch: fetchData };
 }
 
 export default useCustomQuery;
