@@ -1,12 +1,12 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import type { PAGINATION_ORDER } from "../../enums/common";
 import { getLpList } from "../../apis/ip";
 import { QUERY_KEY } from "../../constants/key";
+import { PAGINATION_ORDER } from "../../enums/common";
 
 function useGetInfiniteLpList(
     limit: number,
     search?: string,
-    order?: PAGINATION_ORDER,
+    order?: (typeof PAGINATION_ORDER)[keyof typeof PAGINATION_ORDER],
 ) {
     return useInfiniteQuery({
         queryFn: ({ pageParam }) =>
@@ -14,8 +14,7 @@ function useGetInfiniteLpList(
         queryKey: [QUERY_KEY.lps, search, order],
         initialPageParam: 0,
         getNextPageParam: (lastPage) => {
-            //console.log(lastPage, allPages);
-            return lastPage.data.hasNext ? lastPage.data.nextCursor : undefined;
+            return lastPage.data.data.hasNext ? lastPage.data.data.nextCursor : undefined;
         }
     })
 }

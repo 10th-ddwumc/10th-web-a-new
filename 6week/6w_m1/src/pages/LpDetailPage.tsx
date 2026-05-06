@@ -1,66 +1,126 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import { getLpDetail } from "../apis/ip";
+import { useGetLpComments } from "../hooks/queries/useGetLpComments";
+import { useAuth } from "../context/AuthContext";
 import LpCardSkeleton from "../components/LpCard/LpCardSkeleton";
 
 const LpDetailPage = () => {
     const { lpid } = useParams();
-    const navigate = useNavigate();
+    const { userName } = useAuth();
+    const [commentOrder, setCommentOrder] = useState<"asc" | "desc">("desc");
 
-    // lpid를 키에 포함하여 패칭
-    const { data, isLoading, isError } = useQuery({
+    const [commentInput, setCommentInput] = useState("");
+    const [localComments, setLocalComments] = useState<any[]>([]);
+
+    const { data: detailData, isLoading: isDetailLoading } = useQuery({
         queryKey: ["lp", lpid],
         queryFn: () => getLpDetail(lpid!),
         enabled: !!lpid
     });
 
-    if (isLoading) return <div className="pt-32 max-w-2xl mx-auto"><LpCardSkeleton /></div>;
-    if (isError) return <div className="pt-32 text-center text-white">데이터를 불러오지 못했습니다.</div>;
+    const {
+        data: commentData,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading: isCommentLoading
+    } = useGetLpComments(lpid!, commentOrder);
 
-    const lp = data?.data;
+    const { ref, inView } = useInView();
+
+    useEffect(() => {
+        if (inView && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+    const handleAddComment = () => {
+        if (!commentInput.trim()) return;
+
+        const newComment = {
+            id: Date.now(), // 임시 고유 ID
+            authorName: userName || "익명",
+            content: commentInput,
+            createdAt: new Date().toISOString()
+        };
+
+        setLocalComments([newComment, ...localComments]);
+        setCommentInput(""); // 입력창 초기화
+    };
+
+    if (isDetailLoading) return <div className="pt-32 max-w-2xl mx-auto"><LpCardSkeleton /></div>;
+
+    const lp = detailData?.data;
 
     return (
         <div className="pt-24 pb-12 px-4 max-w-4xl mx-auto text-white">
+
             <div className="bg-[#1E1E1E] rounded-3xl p-8 shadow-2xl">
-                <div className="flex justify-between items-start mb-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-200 rounded-full overflow-hidden">
-                            {lp?.authorld} {/* 실제 avatar 데이터 연동 가능 */}
-                        </div>
-                        <span className="font-bold">작성자</span>
-                    </div>
-                    <span className="text-gray-400 text-sm">1일 전</span>
-                </div>
-
-                <div className="flex justify-between items-center mb-8">
-                    <h1 className="text-3xl font-bold">{lp?.title}</h1>
-                    <div className="flex gap-4">
-                        <button className="text-gray-400 hover:text-white">✏️</button>
-                        <button className="text-gray-400 hover:text-white">🗑️</button>
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold">댓글</h2>
+                    <div className="bg-gray-800 p-1 rounded-md flex gap-1">
+                        <button onClick={() => setCommentOrder("asc")} className={`px-3 py-1 text-sm rounded ${commentOrder === "asc" ? "bg-white text-black" : "text-gray-400"}`}>오래된순</button>
+                        <button onClick={() => setCommentOrder("desc")} className={`px-3 py-1 text-sm rounded ${commentOrder === "desc" ? "bg-white text-black" : "text-gray-400"}`}>최신순</button>
                     </div>
                 </div>
 
-                <div className="flex justify-center mb-10">
-                    <div className="w-full max-w-md aspect-square rounded-full overflow-hidden border-8 border-gray-800 shadow-2xl animate-spin-slow">
-                        <img src={lp?.thumbnail} className="w-full h-full object-cover" alt="album" />
-                    </div>
-                </div>
-
-                <p className="text-gray-300 leading-relaxed text-center mb-10 whitespace-pre-wrap">
-                    {lp?.content}
-                </p>
-
-                <div className="flex justify-center gap-2 flex-wrap mb-10">
-                    {lp?.tags.map(tag => (
-                        <span key={tag.id} className="px-4 py-1 bg-gray-800 rounded-full text-sm text-gray-400">#{tag.name}</span>
-                    ))}
-                </div>
-
-                <div className="flex justify-center">
-                    <button className="flex items-center gap-2 text-2xl hover:scale-110 transition-transform">
-                        ❤️ <span className="text-lg">{lp?.likes.length}</span>
+                <div className="flex gap-2 mb-8">
+                    <input
+                        type="text"
+                        value={commentInput}
+                        onChange={(e) => setCommentInput(e.target.value)}
+                        placeholder="댓글을 입력해주세요"
+                        className="flex-1 bg-transparent border border-gray-700 rounded-md px-4 py-2 outline-none focus:border-pink-500"
+                        onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
+                    />
+                    <button
+                        onClick={handleAddComment}
+                        className="bg-gray-700 px-6 py-2 rounded-md hover:bg-pink-500 transition-colors"
+                    >
+                        작성
                     </button>
                 </div>
+
+                <div className="flex flex-col gap-6">
+                    {localComments.map((comment) => (
+                        <div key={comment.id} className="flex gap-3 items-start group">
+                            <div className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center text-xs font-bold">
+                                {comment.authorName?.[0]}
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="font-bold text-sm">{comment.authorName}</span>
+                                    <button className="text-gray-500">⋮</button>
+                                </div>
+                                <p className="text-gray-300 text-sm">{comment.content}</p>
+                            </div>
+                        </div>
+                    ))}
+
+                    {commentData?.pages.flatMap(page => page.data.data).map((comment: any) => {
+                        const displayName = comment.authorName || comment.nickname || "연진김";
+
+                        return (
+                            <div key={comment.id} className="flex gap-3 items-start group">
+                                <div className="w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center text-xs font-bold shrink-0">
+                                    {displayName[0]}
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="font-bold text-sm text-white">{displayName}</span>
+                                        <button className="opacity-0 group-hover:opacity-100 text-gray-500">⋮</button>
+                                    </div>
+                                    <p className="text-gray-300 text-sm">{comment.content}</p>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                <div ref={ref} className="h-4" />
             </div>
         </div>
     );
