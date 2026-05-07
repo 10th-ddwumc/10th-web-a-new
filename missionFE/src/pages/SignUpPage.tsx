@@ -84,18 +84,37 @@ const SignUpPage = () => {
     if (isStepValid) setStep(step + 1);
   };
 
-  const onSubmit = (data: SignUpFormData) => {
+const onSubmit = async (data: SignUpFormData) => {
+  try {
+    // ✅ 실제 백엔드 회원가입 API 호출
+    const res = await fetch('http://localhost:8000/v1/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: data.nickname,
+        email: data.email,
+        password: data.password,
+      }),
+    });
+
+    if (!res.ok) {
+      alert('회원가입에 실패했습니다. 이미 사용중인 이메일일 수 있어요.');
+      return;
+    }
+
     const newUser: UserInfo = {
       email: data.email,
       nickname: data.nickname,
-      isLoggedIn: true,
+      isLoggedIn: false,
       joinedAt: new Date().toISOString(),
     };
     setUser(newUser);
     alert(`${data.nickname}님, 회원가입이 완료되었습니다.`);
-    navigate('/');
-  };
-
+    navigate('/login');
+  } catch {
+    alert('회원가입 중 오류가 발생했습니다.');
+  }
+};
   return (
     <div className="min-h-screen bg-black text-white font-sans">
       <Navbar />

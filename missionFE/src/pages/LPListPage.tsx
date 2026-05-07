@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import useCustomQuery from '../hooks/useCustomQuery';
+import useInfiniteScroll from '../hooks/useInfiniteScroll';
 import Navbar from '../components/Navbar';
 
 interface LP {
@@ -30,21 +30,40 @@ const LPListPage = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sort, setSort] = useState<'asc' | 'desc'>('desc');
+  const observerRef = useRef<HTMLDivElement | null>(null); // ✅ 무한스크롤 트리거
 
-  const { data, isLoading, isError, refetch } = useCustomQuery<LP[]>({
-    queryKey: ['lps', sort],
-    queryFn: async () => {
-      const res = await fetch(
-        `http://localhost:8000/v1/lps?order=${sort}&cursor=0&limit=500`
-      );
-      if (!res.ok) throw new Error('데이터를 불러오지 못했습니다.');
-      const json = await res.json();
-      return json.data.data ?? [];
-    },
-    staleTime: 1000 * 30,
-    gcTime: 1000 * 60 * 2,
-    retry: 2,
-  });
+  const { data, isLoading, isFetchingNextPage, isError, hasNextPage, fetchNextPage, refetch } =
+    useInfiniteScroll<LP>({
+      queryKey: ['lps', sort],
+      queryFn: async (cursor) => {
+        const res = await fetch(
+          `http://localhost:8000/v1/lps?order=${sort}&cursor=${cursor}&limit=10`
+        );
+        if (!res.ok) throw new Error('데이터를 불러오지 못했습니다.');
+        const json = await res.json();
+        return {
+          data: json.data.data ?? [],
+          nextCursor: json.data.nextCursor ?? null,
+          hasNext: json.data.hasNext ?? false,
+        };
+      },
+      staleTime: 1000 * 60 * 5,
+    });
+
+  // ✅ IntersectionObserver로 스크롤 끝 감지
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerRef.current) observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, fetchNextPage]);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -71,7 +90,7 @@ const LPListPage = () => {
               onClick={() => { navigate('/lp'); setSidebarOpen(false); }}
               className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#1a1a1a] text-gray-300 hover:text-white transition-all text-left"
             >
-            찾기
+              찾기
             </button>
             <button
               onClick={() => { navigate('/'); setSidebarOpen(false); }}
@@ -124,6 +143,7 @@ const LPListPage = () => {
             </div>
           </div>
 
+          {/* 스켈레톤 로딩 */}
           {isLoading && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {Array.from({ length: 10 }).map((_, i) => (
@@ -132,6 +152,7 @@ const LPListPage = () => {
             </div>
           )}
 
+          {/* 에러 */}
           {isError && (
             <div className="flex flex-col justify-center items-center h-60 gap-4">
               <p className="text-red-400">데이터를 불러오지 못했습니다.</p>
@@ -144,44 +165,52 @@ const LPListPage = () => {
             </div>
           )}
 
+          {/* 데이터 */}
           {data && Array.isArray(data) && (
-  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-    {data.map((lp) => (
-      <div
-        key={lp.id}
-        onClick={() => navigate(`/lp/${lp.id}`)}
-        className="cursor-pointer group"
-      >
-        {/* 이미지 + 오버레이 감싸는 div에 relative */}
-        <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-900">
-          <img
-            src={lp.thumbnail}
-            alt={lp.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            onError={(e) => {
-              e.currentTarget.src = 'https://via.placeholder.com/300x300?text=LP';
-            }}
-          />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {data.map((lp) => (
+                <div
+                  key={lp.id}
+                  onClick={() => navigate(`/lp/${lp.id}`)}
+                  className="cursor-pointer group"
+                >
+                  <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-900">
+                    <img
+                      src={lp.thumbnail}
+                      alt={lp.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.currentTarget.src = 'https://via.placeholder.com/300x300?text=LP';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+                      <p className="text-white text-xs font-bold truncate">{lp.title}</p>
+                      <p className="text-gray-300 text-xs mt-1">
+                        {new Date(lp.createdAt).toLocaleDateString('ko-KR')}
+                      </p>
+                      <p className="text-[#ff007a] text-xs mt-1">♥ {lp.likeCount}</p>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-300 truncate">{lp.title}</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {new Date(lp.createdAt).toLocaleDateString('ko-KR')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
 
-          {/* ✅ 오버레이 - 이미지 안에서만 */}
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
-            <p className="text-white text-xs font-bold truncate">{lp.title}</p>
-            <p className="text-gray-300 text-xs mt-1">
-              {new Date(lp.createdAt).toLocaleDateString('ko-KR')}
-            </p>
-            <p className="text-[#ff007a] text-xs mt-1">♥ {lp.likeCount}</p>
-          </div>
-        </div>
+          {/* ✅ 다음 페이지 로딩 스켈레톤 */}
+          {isFetchingNextPage && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          )}
 
-        {/* 기본 텍스트 */}
-        <p className="mt-2 text-xs text-gray-300 truncate">{lp.title}</p>
-        <p className="text-xs text-gray-500 truncate">
-          {new Date(lp.createdAt).toLocaleDateString('ko-KR')}
-        </p>
-      </div>
-    ))}
-  </div>
-)}
+          {/* ✅ 무한스크롤 트리거 */}
+          <div ref={observerRef} className="h-10" />
         </main>
       </div>
 

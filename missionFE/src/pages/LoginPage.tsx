@@ -23,16 +23,44 @@ const LoginPage = () => {
     resolver: zodResolver(loginSchema),
     mode: 'onChange'
   });
+const onSubmit = async (data: LoginFormData) => {
+  try {
+    // ✅ 실제 백엔드 로그인 API 호출
+    const res = await fetch('http://localhost:8000/v1/auth/signin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: data.email,
+        password: data.password,
+      }),
+    });
 
-  const onSubmit = (data: LoginFormData) => {
+    if (!res.ok) {
+      alert('이메일 또는 비밀번호가 올바르지 않습니다.');
+      return;
+    }
+
+    const json = await res.json();
+    const { accessToken, refreshToken, name } = json.data;
+
+    // ✅ 토큰 저장
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('refreshToken', refreshToken);
+
     setUser({
       email: data.email,
-      nickname: data.email.split('@')[0],
+      nickname: name,
       isLoggedIn: true,
       joinedAt: new Date().toISOString(),
     });
-    navigate(from); // ✅ 원래 페이지로 복귀
-  };
+
+    const from = localStorage.getItem('loginRedirect') ?? location.state?.from ?? '/';
+    localStorage.removeItem('loginRedirect');
+    navigate(from);
+  } catch {
+    alert('로그인 중 오류가 발생했습니다.');
+  }
+};
 
   return (
     <div className="min-h-screen bg-black text-white font-sans">
