@@ -70,9 +70,10 @@ const LPDetailPage = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
+
   // ✅ LP 상세
   const { data, isLoading, isError, refetch } = useCustomQuery<LP>({
-    queryKey: ['lp', id ?? ''],
+queryKey: ['lp', id ?? ''],
     queryFn: async () => {
       const res = await fetch(`http://localhost:8000/v1/lps/${id}`);
       if (!res.ok) throw new Error('데이터를 불러오지 못했습니다.');
@@ -81,6 +82,7 @@ const LPDetailPage = () => {
     },
     staleTime: 1000 * 30,
     retry: 2,
+    enabled: !!user?.isLoggedIn,
   });
 
   // ✅ 댓글 무한스크롤
@@ -108,6 +110,7 @@ const LPDetailPage = () => {
       };
     },
     staleTime: 1000 * 30,
+    enabled: !!user?.isLoggedIn,
   });
 
  useEffect(() => {

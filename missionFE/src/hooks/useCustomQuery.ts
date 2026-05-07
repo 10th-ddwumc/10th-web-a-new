@@ -8,14 +8,16 @@ interface UseCustomQueryOptions<T> {
   staleTime?: number;
   gcTime?: number; // ✅ gcTime 추가
   retry?: number;
+  enabled?: boolean;
 }
 
 function useCustomQuery<T>({
   queryKey,
   queryFn,
   staleTime = 0,
-  gcTime = 1000 * 60 * 5, // ✅ 기본값 5분
+  gcTime = 1000 * 60 * 5, 
   retry = 1,
+  enabled = true,
 }: UseCustomQueryOptions<T>) {
   const key = queryKey.join("-");
   const [data, setData] = useState<T | null>(null);
@@ -28,6 +30,7 @@ function useCustomQuery<T>({
   queryFnRef.current = queryFn;
 
   const fetchData = useCallback(async () => {
+    if (!enabled) return;
     retryCount.current = 0;
 
     const cached = cache.get(key);
@@ -58,7 +61,7 @@ function useCustomQuery<T>({
         }
       }
     }
-  }, [key, staleTime, retry]);
+  }, [key, staleTime, retry, enabled]);
 
   useEffect(() => {
     fetchData();

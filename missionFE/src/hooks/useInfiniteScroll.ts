@@ -4,12 +4,14 @@ interface UseInfiniteScrollOptions<T> {
   queryKey: string[];
   queryFn: (cursor: number) => Promise<{ data: T[]; nextCursor: number | null; hasNext: boolean }>;
   staleTime?: number;
+  enabled?: boolean;
 }
 
 function useInfiniteScroll<T>({
   queryKey,
   queryFn,
   staleTime = 0,
+  enabled = true,
 }: UseInfiniteScrollOptions<T>) {
   const key = queryKey.join("-");
   const [pages, setPages] = useState<T[][]>([]);
@@ -21,6 +23,8 @@ function useInfiniteScroll<T>({
   const isFetchingRef = useRef(false); // ✅ ref로 관리
 
   const fetchFirstPage = useCallback(async () => {
+    if (!enabled) return;
+    
     setIsLoading(true);
     setIsError(false);
     setPages([]);
@@ -37,7 +41,7 @@ function useInfiniteScroll<T>({
     } finally {
       setIsLoading(false);
     }
-  }, [key]);
+  }, [key,enabled]);
 
   const fetchNextPage = useCallback(async () => {
     if (!hasNextPage || nextCursor === null || isFetchingRef.current) return;
