@@ -7,17 +7,14 @@ interface CustomInternalAxiosRequestConfig extends InternalAxiosRequestConfig {
 
 let refreshPromise: Promise<string> | null = null;
 
-// 1. 기본 API 인스턴스
 export const axiosInstance: AxiosInstance = axios.create({
     baseURL: import.meta.env.VITE_SERVER_API_URL,
 });
 
-// 2. 토큰 재발급 전용 순수 인스턴스 (인터셉터 없음)
 const refreshInstance = axios.create({
     baseURL: import.meta.env.VITE_SERVER_API_URL,
 });
 
-// 요청 인터셉터
 axiosInstance.interceptors.request.use(
     (config) => {
         const stored = localStorage.getItem(LOCAL_STORAGE_KEY.accessToken);
@@ -31,13 +28,11 @@ axiosInstance.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-// 응답 인터셉터
 axiosInstance.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest: CustomInternalAxiosRequestConfig = error.config;
 
-        // [핵심] 리프레시 요청 자체가 401이 나면 즉시 로그아웃 (무한 루프 방지)
         if (originalRequest.url?.includes('/v1/auth/refresh')) {
             localStorage.clear();
             window.location.href = "/login";
@@ -51,7 +46,6 @@ axiosInstance.interceptors.response.use(
                 refreshPromise = (async () => {
                     try {
                         const refreshToken = localStorage.getItem(LOCAL_STORAGE_KEY.refreshToken);
-                        // [핵심] refreshInstance 사용
                         const { data } = await refreshInstance.post("/v1/auth/refresh", {
                             refresh: refreshToken,
                         });
