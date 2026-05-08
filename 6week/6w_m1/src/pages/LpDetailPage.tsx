@@ -18,7 +18,10 @@ const LpDetailPage = () => {
     const { data: detailData, isLoading: isDetailLoading } = useQuery({
         queryKey: ["lp", lpid],
         queryFn: () => getLpDetail(lpid!),
-        enabled: !!lpid
+        enabled: !!lpid,
+
+        staleTime: 1000 * 60 * 5, // 5분
+        gcTime: 1000 * 60 * 10, // 10분
     });
 
     const {
@@ -121,6 +124,7 @@ const LpDetailPage = () => {
                 </div>
 
                 <div ref={ref} className="h-4" />
+                {isFetchingNextPage && <div className="text-center py-4 text-sm text-gray-500">댓글 로딩 중...</div>}
             </div>
         </div>
     );

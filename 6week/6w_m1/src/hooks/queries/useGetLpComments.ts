@@ -15,6 +15,8 @@ export const useGetLpComments = (lpId: string, order: "asc" | "desc") => {
         initialPageParam: 0,
         getNextPageParam: (lastPage) => {
             return lastPage.data.hasNext ? lastPage.data.nextCursor : undefined;
-        }
+        },
+        staleTime: 1000 * 60 * 5, // 5분 동안 데이터를 '신선함' 상태로 유지
+        gcTime: 1000 * 60 * 10,
     });
 };
