@@ -13,34 +13,36 @@ interface AuthContextType {
   logout: () => Promise<void>;
 }
 
+interface AuthStorage {
+  accessToken: string | null;
+  refreshToken: string | null;
+  userName: string | null;
+}
+
 export const AuthContext = createContext<AuthContextType | undefined>(
   undefined,
 );
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
   const {
-    getItem: getAccessToken,
-    setItem: setAccessToken,
-    removeItem: removeAccessToken,
-  } = useLocalStorage(LOCAL_STORAGE_KEY.accessToken);
-  const {
-    getItem: getRefreshToken,
-    setItem: setRefreshToken,
-    removeItem: removeRefreshToken,
-  } = useLocalStorage(LOCAL_STORAGE_KEY.refreshToken);
-  const {
-    getItem: getUserName,
-    setItem: setUserNameStorage,
-    removeItem: removeUserName,
-  } = useLocalStorage("userName");
+    getItem: getAuthStorage,
+    setItem: setAuthStorage,
+    removeItem: removeAuthStorage,
+  } = useLocalStorage<AuthStorage>("auth");
+
+  const storedAuth = getAuthStorage();
 
   const [accessToken, setAccessTokenState] = useState<string | null>(
-    getAccessToken(),
+    storedAuth?.accessToken ?? null,
   );
+
   const [refreshToken, setRefreshTokenState] = useState<string | null>(
-    getRefreshToken(),
+    storedAuth?.refreshToken ?? null,
   );
-  const [userName, setUserNameState] = useState<string | null>(getUserName());
+
+  const [userName, setUserNameState] = useState<string | null>(
+    storedAuth?.userName ?? null,
+  );
 
   const login = async (signinData: RequestSigninDto) => {
     try {
@@ -48,16 +50,21 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       const { data } = response;
 
       if (data && data.accessToken) {
-        setAccessTokenState(data.accessToken);
-        if (data.refreshToken) setRefreshTokenState(data.refreshToken);
-        setUserNameState(data.name ?? null);
+        const authData: AuthStorage = {
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken ?? null,
+          userName: data.name ?? null,
+        };
 
-        setAccessToken(data.accessToken);
-        if (data.refreshToken) setRefreshToken(data.refreshToken);
-        if (data.name) setUserNameStorage(data.name);
+        setAccessTokenState(authData.accessToken);
+        setRefreshTokenState(authData.refreshToken);
+        setUserNameState(authData.userName);
+
+        setAuthStorage(authData);
 
         return true;
       }
+
       return false;
     } catch (error) {
       console.error("로그인 에러:", error);
@@ -71,9 +78,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     } catch (error) {
       console.error("로그아웃 에러:", error);
     } finally {
-      removeAccessToken();
-      removeRefreshToken();
-      removeUserName();
+      removeAuthStorage();
+
       setAccessTokenState(null);
       setRefreshTokenState(null);
       setUserNameState(null);
@@ -91,7 +97,10 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context)
+
+  if (!context) {
     throw new Error("useAuth는 AuthProvider 내부에서 사용되어야 합니다.");
+  }
+
   return context;
 };
