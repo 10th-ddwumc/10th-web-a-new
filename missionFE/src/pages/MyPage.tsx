@@ -1,4 +1,3 @@
-// src/pages/MyPage.tsx
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -17,7 +16,6 @@ interface MyInfo {
   avatar?: string;
 }
 
-// ─── API 함수 ────────────────────────────────────────────
 async function fetchMyInfo(): Promise<MyInfo> {
   const res = await fetch(`${BASE_URL}/v1/users/me`, {
     headers: { Authorization: `Bearer ${getToken()}` },
@@ -30,10 +28,7 @@ async function fetchMyInfo(): Promise<MyInfo> {
 async function updateMyInfo(dto: { name?: string; bio?: string; avatar?: string }) {
   const res = await fetch(`${BASE_URL}/v1/users`, {
     method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
-    },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` },
     body: JSON.stringify(dto),
   });
   if (!res.ok) throw new Error('프로필 수정에 실패했습니다.');
@@ -53,11 +48,10 @@ async function uploadAvatar(file: File): Promise<string> {
   return json.data.imageUrl as string;
 }
 
-// ─── 컴포넌트 ────────────────────────────────────────────
 const MyPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [user] = useLocalStorage<UserInfo | null>('user_info', null);
+  const [user, setUser] = useLocalStorage<UserInfo | null>('user_info', null);
 
   const [isEditing, setIsEditing] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -66,7 +60,6 @@ const MyPage = () => {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 비로그인 보호
   useEffect(() => {
     if (!user?.isLoggedIn) {
       alert('로그인이 필요한 서비스입니다.');
@@ -74,14 +67,12 @@ const MyPage = () => {
     }
   }, [user]);
 
-  // 내 정보 조회
   const { data: myInfo, isLoading } = useQuery({
     queryKey: ['myInfo'],
     queryFn: fetchMyInfo,
     enabled: !!user?.isLoggedIn,
   });
 
-  // 편집 모드 열 때 현재 값으로 초기화
   const openEdit = () => {
     setNameInput(myInfo?.name ?? '');
     setBioInput(myInfo?.bio ?? '');
@@ -96,7 +87,6 @@ const MyPage = () => {
     setAvatarPreview(null);
   };
 
-  // 아바타 파일 선택
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -105,25 +95,54 @@ const MyPage = () => {
     setAvatarPreview(URL.createObjectURL(file));
   };
 
-  // 프로필 수정 mutation
   const updateMutation = useMutation({
     mutationFn: async () => {
       let avatarUrl = myInfo?.avatar;
-      // 새 이미지가 있으면 먼저 업로드
-      if (avatarFile) {
-        avatarUrl = await uploadAvatar(avatarFile);
-      }
+      if (avatarFile) avatarUrl = await uploadAvatar(avatarFile);
       return updateMyInfo({
         name: nameInput.trim() || undefined,
-        bio: bioInput.trim() || undefined,  // 빈 문자열이면 undefined (옵션 처리)
+        bio: bioInput.trim() || undefined,
         avatar: avatarUrl,
       });
     },
+
+    // ✅ onMutate: 서버 응답 전에 Navbar + 마이페이지 닉네임 즉시 변경
+    onMutate: async () => {
+      // 이전 상태 스냅샷 저장 (롤백용)
+      const previousUser = user;
+      const previousMyInfo = queryClient.getQueryData<MyInfo>(['myInfo']);
+
+      // ① Navbar의 닉네임 즉시 변경 (useLocalStorage → user_info)
+      if (user && nameInput.trim()) {
+        setUser({ ...user, nickname: nameInput.trim() });
+      }
+
+      // ② 마이페이지 캐시 즉시 변경
+      if (previousMyInfo) {
+        queryClient.setQueryData<MyInfo>(['myInfo'], {
+          ...previousMyInfo,
+          name: nameInput.trim() || previousMyInfo.name,
+          bio: bioInput.trim() || undefined,
+        });
+      }
+
+      return { previousUser, previousMyInfo };
+    },
+
+    onError: (e: Error, _, context) => {
+      // ✅ 실패 시 롤백
+      if (context?.previousUser) setUser(context.previousUser);
+      if (context?.previousMyInfo) {
+        queryClient.setQueryData(['myInfo'], context.previousMyInfo);
+      }
+      alert(e.message);
+    },
+
     onSuccess: () => {
+      // ✅ 성공 시 서버 데이터로 최종 동기화
       queryClient.invalidateQueries({ queryKey: ['myInfo'] });
       closeEdit();
     },
-    onError: (e: Error) => alert(e.message),
   });
 
   if (isLoading) {
@@ -148,45 +167,30 @@ const MyPage = () => {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       <Navbar />
-
       <div className="max-w-2xl mx-auto px-6 py-10 w-full">
 
-        {/* ── 프로필 카드 ── */}
+        {/* 프로필 카드 */}
         <div className="bg-[#0a0a0a] rounded-3xl border border-gray-800 p-6 flex items-center gap-5">
-          {/* 아바타 */}
           <div className="relative shrink-0">
             {myInfo?.avatar ? (
-              <img
-                src={myInfo.avatar}
-                alt="프로필"
-                className="w-20 h-20 rounded-full object-cover border-2 border-gray-700"
-                onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/80?text=?'; }}
-              />
+              <img src={myInfo.avatar} alt="프로필" className="w-20 h-20 rounded-full object-cover border-2 border-gray-700" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/80?text=?'; }} />
             ) : (
               <div className="w-20 h-20 rounded-full bg-[#1a1a1a] border-2 border-gray-700 flex items-center justify-center text-2xl font-black text-[#ff007a]">
                 {myInfo?.name?.[0] ?? '?'}
               </div>
             )}
           </div>
-
-          {/* 정보 */}
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-black text-white truncate">{myInfo?.name}</h1>
             {myInfo?.bio && <p className="text-sm text-gray-400 mt-1 truncate">{myInfo.bio}</p>}
             <p className="text-xs text-gray-600 mt-1 truncate">{myInfo?.email}</p>
           </div>
-
-          {/* 설정(수정) 버튼 */}
-          <button
-            onClick={openEdit}
-            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-[#1a1a1a] border border-gray-700 hover:border-[#ff007a] hover:text-[#ff007a] text-gray-400 transition-all"
-            title="프로필 수정"
-          >
+          <button onClick={openEdit} className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-[#1a1a1a] border border-gray-700 hover:border-[#ff007a] hover:text-[#ff007a] text-gray-400 transition-all" title="프로필 수정">
             ⚙
           </button>
         </div>
 
-        {/* ── 편집 모달 ── */}
+        {/* 편집 모달 */}
         {isEditing && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center px-4"
@@ -194,30 +198,16 @@ const MyPage = () => {
             onClick={(e) => { if (e.target === e.currentTarget) closeEdit(); }}
           >
             <div className="w-full max-w-md bg-[#0a0a0a] rounded-3xl border border-gray-800 p-6 space-y-5">
-              {/* 헤더 */}
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-black text-white">프로필 수정</h2>
-                <button
-                  onClick={closeEdit}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 text-gray-400 hover:text-white transition-colors"
-                >
-                  ✕
-                </button>
+                <button onClick={closeEdit} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 text-gray-400 hover:text-white transition-colors">✕</button>
               </div>
 
-              {/* 아바타 업로드 */}
+              {/* 아바타 */}
               <div className="flex flex-col items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="relative group"
-                >
+                <button type="button" onClick={() => fileInputRef.current?.click()} className="relative group">
                   {avatarPreview || myInfo?.avatar ? (
-                    <img
-                      src={avatarPreview ?? myInfo?.avatar}
-                      alt="미리보기"
-                      className="w-20 h-20 rounded-full object-cover border-2 border-gray-700"
-                    />
+                    <img src={avatarPreview ?? myInfo?.avatar} alt="미리보기" className="w-20 h-20 rounded-full object-cover border-2 border-gray-700" />
                   ) : (
                     <div className="w-20 h-20 rounded-full bg-[#1a1a1a] border-2 border-gray-700 flex items-center justify-center text-2xl font-black text-[#ff007a]">
                       {nameInput?.[0] ?? '?'}
@@ -227,16 +217,8 @@ const MyPage = () => {
                     <span className="text-white text-xs font-medium">📷</span>
                   </div>
                 </button>
-                <span className="text-xs text-gray-600">
-                  {avatarFile ? avatarFile.name : '클릭해서 사진 변경'}
-                </span>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleAvatarChange}
-                />
+                <span className="text-xs text-gray-600">{avatarFile ? avatarFile.name : '클릭해서 사진 변경'}</span>
+                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               </div>
 
               {/* 이름 */}
@@ -252,7 +234,7 @@ const MyPage = () => {
                 />
               </div>
 
-              {/* Bio (옵션) */}
+              {/* Bio */}
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Bio <span className="text-gray-700">(선택)</span></label>
                 <textarea
@@ -265,7 +247,6 @@ const MyPage = () => {
                 />
               </div>
 
-              {/* 저장 버튼 */}
               <button
                 onClick={() => updateMutation.mutate()}
                 disabled={!nameInput.trim() || updateMutation.isPending}

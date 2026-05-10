@@ -16,7 +16,7 @@ interface LP {
   title: string;
   content: string;
   thumbnail: string;
-  //likeCount: number;
+  likeCount: number;
   createdAt: string;
   tags: { id: number; name: string }[];
   likes: { id: number; userId: number; lpId: number }[];
@@ -199,10 +199,15 @@ const LPDetailPage = () => {
     onError: (e: Error) => alert(e.message),
   });
 
-  // ── 좋아요 토글 mutation ──────────────────────────────
+  // ── 좋아요 토글 mutation (낙관적 업데이트) ───────────
+  const [optimisticLikes, setOptimisticLikes] = useState<LP['likes'] | null>(null);
+
+  // 실제 표시할 likes: 낙관적 상태가 있으면 그걸 우선 사용
+  const displayLikes = optimisticLikes ?? data?.likes ?? [];
+  const displayIsLiked = displayLikes.some((l) => l.userId === myInfoRef.current?.id);
+
   const likeMutation = useMutation({
     mutationFn: async () => {
-      // ✅ mutate 실행 시점의 최신 data로 판단 (클로저 문제 방지)
       const currentlyLiked = data?.likes?.some((l) => l.userId === myInfoRef.current?.id) ?? false;
       const method = currentlyLiked ? 'DELETE' : 'POST';
       const res = await fetch(`${BASE_URL}/v1/lps/${id}/likes`, {
@@ -212,11 +217,35 @@ const LPDetailPage = () => {
       if (!res.ok) throw new Error('좋아요 처리에 실패했습니다.');
       return res.json();
     },
+
+    // ✅ onMutate: 서버 응답 전에 UI 즉시 반영
+    onMutate: () => {
+      const myId = myInfoRef.current?.id;
+      if (!myId || !data) return;
+
+      const currentlyLiked = data.likes.some((l) => l.userId === myId);
+
+      if (currentlyLiked) {
+        // 좋아요 취소: likes 배열에서 제거
+        setOptimisticLikes(data.likes.filter((l) => l.userId !== myId));
+      } else {
+        // 좋아요 추가: 임시 항목 추가
+        setOptimisticLikes([...data.likes, { id: Date.now(), userId: myId, lpId: Number(id) }]);
+      }
+    },
+
     onSuccess: () => {
+      // 서버 데이터로 최종 동기화 후 낙관적 상태 초기화
       cache.delete(`lp-${id}`);
       refetch();
+      setOptimisticLikes(null);
     },
-    onError: (e: Error) => alert(e.message),
+
+    onError: (e: Error) => {
+      // 실패 시 낙관적 상태 롤백
+      setOptimisticLikes(null);
+      alert(e.message);
+    },
   });
 
   // ── 댓글 작성 mutation ────────────────────────────────
@@ -342,7 +371,7 @@ const LPDetailPage = () => {
                   <h1 className="text-2xl font-black text-white">{data.title}</h1>
                   <div className="flex items-center gap-4 text-sm text-gray-400">
                     <span>📅 {new Date(data.createdAt).toLocaleDateString('ko-KR')}</span>
-                    <span>♥ {data.likes.length}</span>
+                    <span>♥ {displayLikes.length}</span>
                   </div>
                 </div>
 
@@ -361,17 +390,17 @@ const LPDetailPage = () => {
                 </div>
 
                 <div className="flex gap-3">
-                  {/* ✅ 좋아요 버튼 - myInfoRef 로딩 전엔 비활성화 */}
+                  {/* ✅ 좋아요 버튼 - 낙관적 업데이트 적용 */}
                   <button
                     onClick={() => likeMutation.mutate()}
-                    disabled={likeMutation.isPending}
+                    disabled={likeMutation.isPending || !myInfoRef.current}
                     className={`flex-1 py-3 font-bold rounded-xl transition-all border ${
-                      isLiked
+                      displayIsLiked
                         ? 'bg-[#ff007a] text-white border-[#ff007a]'
                         : 'bg-[#1a1a1a] text-white border-gray-800 hover:bg-[#ff007a] hover:border-[#ff007a]'
                     } disabled:opacity-50`}
                   >
-                    {likeMutation.isPending ? '...' : `♥ 좋아요 ${data.likes.length}`}
+                    ♥ 좋아요 {displayLikes.length}
                   </button>
 
                   <button
