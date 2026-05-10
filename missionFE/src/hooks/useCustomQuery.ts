@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-
+export { cache };
 const cache = new Map<string, { data: unknown; timestamp: number }>();
 
 interface UseCustomQueryOptions<T> {

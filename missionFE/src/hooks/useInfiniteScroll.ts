@@ -10,7 +10,7 @@ interface UseInfiniteScrollOptions<T> {
 function useInfiniteScroll<T>({
   queryKey,
   queryFn,
-  staleTime = 0,
+  //staleTime = 0,
   enabled = true,
 }: UseInfiniteScrollOptions<T>) {
   const key = queryKey.join("-");

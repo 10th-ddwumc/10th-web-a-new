@@ -7,6 +7,7 @@ import LPListPage from './pages/LPListPage';
 import LPDetailPage from './pages/LPDetailPage'
 import GoogleCallbackPage from './pages/GoogleCallbackPage';
 import LPCreatePage from './pages/LPCreatePage';
+import MyPage from './pages/MyPage';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/lp/:id" element={<LPDetailPage />} />
         <Route path="/v1/auth/google/callback" element={<GoogleCallbackPage />} />
         <Route path="/lp/create" element={<LPCreatePage />} />
+        <Route path="/mypage" element={<MyPage />} />
       </Routes>
     </BrowserRouter>
   );
