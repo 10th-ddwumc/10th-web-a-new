@@ -13,25 +13,24 @@ import { getMyInfo } from "../apis/auth";
 interface AuthContextType {
     accessToken: string | null;
     refreshToken: string | null;
-    userName: string | null; // 사용자 닉네임 추가
+    userName: string | null;
 
-    // 로그인 useMutation 성공 시 토큰을 저장하기 위한 함수
     setAuth: (authData: AuthTokens) => void;
-
-    //  로그아웃, 탈퇴 성공 시 토큰과 유저 정보를 제거하기 위한 함수
     clearAuth: () => void;
-
-    //  기존 코드 호환용으로 logout 이름도 유지
     logout: () => void;
+
+    // 수정: 마이페이지 닉네임 수정 시 Navbar 닉네임도 즉시 바꾸기 위한 함수
+    updateUserName: (name: string | null) => void;
 }
 
 export const AuthContext = createContext<AuthContextType>({
     accessToken: null,
     refreshToken: null,
-    userName: null, // 사용자 닉네임 추가
+    userName: null,
     setAuth: () => { },
     clearAuth: () => { },
     logout: () => { },
+    updateUserName: () => { },
 });
 
 export const AuthProvider = ({ children }: PropsWithChildren) => {
@@ -55,9 +54,8 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         getRefreshTokenFromStorage(),
     );
 
-    const [userName, setUserName] = useState<string | null>(null); // 사용자 닉네임 상태 추가
+    const [userName, setUserName] = useState<string | null>(null);
 
-    //로그인 성공 시 useMutation의 onSuccess에서 호출할 함수
     const setAuth = (authData: AuthTokens) => {
         setAccessTokeninStorage(authData.accessToken);
         setRefreshTokeninStorage(authData.refreshToken);
@@ -68,7 +66,6 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         setUserName(authData.name ?? null);
     };
 
-    //  로그아웃, 탈퇴 성공 시 공통으로 사용할 함수
     const clearAuth = () => {
         removeAccessTokenFromStorage();
         removeRefreshTokenFromStorage();
@@ -78,9 +75,13 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         setUserName(null);
     };
 
-    // 기존 Navbar, MyPage 등에서 logout을 사용하던 코드가 깨지지 않도록 유지
     const logout = () => {
         clearAuth();
+    };
+
+    // usePatchMyInfo의 onMutate에서 호출하여 Navbar 닉네임을 즉시 변경
+    const updateUserName = (name: string | null) => {
+        setUserName(name);
     };
 
     useEffect(() => {
@@ -91,7 +92,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
 
         getMyInfo()
             .then((res) => setUserName(res.data.name))
-            .catch(() => clearAuth()); // 사용자 닉네임 설정
+            .catch(() => clearAuth());
     }, [accessToken]);
 
     return (
@@ -103,6 +104,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
                 setAuth,
                 clearAuth,
                 logout,
+                updateUserName,
             }}
         >
             {children}
@@ -110,11 +112,9 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     );
 };
 
-// 커스텀 훅 : useAuth
 export const useAuth = () => {
     const context: AuthContextType = useContext(AuthContext);
 
-    // context가 undefined인 경우는 AuthProvide로 감싸지 않은 컴포넌트에서 useAuth를 사용한 경우이므로, 에러를 발생시킴
     if (!context) {
         throw new Error("cannot found AuthContext");
     }
