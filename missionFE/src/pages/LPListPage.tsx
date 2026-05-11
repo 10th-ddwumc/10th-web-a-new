@@ -15,7 +15,7 @@ interface LP {
   createdAt: string;
 }
 
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const HamburgerIcon = () => (
   <svg width="28" height="28" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
