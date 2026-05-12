@@ -5,7 +5,7 @@ import useDebounce from '../hooks/useDebounce';
 import Navbar, { useDeleteAccount } from '../components/Navbar';
 import LpCreateModal, { type LpFormData } from '../components/LpCreateModal';
 import ConfirmModal from '../components/ConfirmModal';
-
+import useThrottleCallback from '../hooks/useThrottleCallback';
 interface LP {
   id: number;
   title: string;
@@ -127,6 +127,19 @@ const LPListPage = () => {
     onError: (error: Error) => alert(error.message),
   });
 
+  // 확인용 임시 코드 - 스크롤 이벤트 쓰로틀 확인
+  const handleScroll = useThrottleCallback(() => {
+    console.log('스크롤 이벤트:', new Date().toLocaleTimeString());
+  }, 1000);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  // ✅ fetchNextPage를 1초에 한 번만 호출되도록 쓰로틀링
+  const throttledFetchNextPage = useThrottleCallback(fetchNextPage, 1000);
+
   // ✅ 무한스크롤 IntersectionObserver
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -135,7 +148,7 @@ const LPListPage = () => {
     );
     if (observerRef.current) observer.observe(observerRef.current);
     return () => observer.disconnect();
-  }, [hasNextPage, fetchNextPage]);
+  }, [hasNextPage, throttledFetchNextPage]);
 
   // ✅ pages를 flat하게 펼쳐서 LP 목록으로 변환
   const lpList = data?.pages.flatMap((page) => page.data) ?? [];
