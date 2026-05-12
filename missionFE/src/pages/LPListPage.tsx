@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
-import useInfiniteScroll from '../hooks/useInfiniteScroll';
+import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
+import useDebounce from '../hooks/useDebounce';
 import Navbar, { useDeleteAccount } from '../components/Navbar';
 import LpCreateModal, { type LpFormData } from '../components/LpCreateModal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -72,24 +72,54 @@ const LPListPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const observerRef = useRef<HTMLDivElement | null>(null);
+  const searchRef = useRef<HTMLInputElement | null>(null);
+
+  // ✅ 검색어 상태 + 300ms 디바운스
+  const [search, setSearch] = useState('');
+  const debouncedQuery = useDebounce(search, 300);
 
   const deleteMutation = useDeleteAccount();
 
-  const { data, isLoading, isFetchingNextPage, isError, hasNextPage, fetchNextPage, refetch } =
-    useInfiniteScroll<LP>({
-      queryKey: ['lps', sort],
-      queryFn: async (cursor) => {
-        const res = await fetch(`${BASE_URL}/v1/lps?order=${sort}&cursor=${cursor}&limit=10`);
-        if (!res.ok) throw new Error('데이터를 불러오지 못했습니다.');
-        const json = await res.json();
-        return {
-          data: json.data.data ?? [],
-          nextCursor: json.data.nextCursor ?? null,
-          hasNext: json.data.hasNext ?? false,
-        };
-      },
-      staleTime: 1000 * 60 * 5,
-    });
+  // ✅ useInfiniteQuery 사용
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = useInfiniteQuery({
+    // ✅ queryKey에 debouncedQuery 포함
+    queryKey: ['lps', sort, debouncedQuery],
+    queryFn: async ({ pageParam = 0 }) => {
+      const params = new URLSearchParams({
+        order: sort,
+        cursor: String(pageParam),
+        limit: '10',
+      });
+      // ✅ 빈 문자열/공백 아닐 때만 search 파라미터 추가
+      if (debouncedQuery.trim()) {
+        params.append('search', debouncedQuery.trim());
+      }
+      const res = await fetch(`${BASE_URL}/v1/lps?${params.toString()}`);
+      if (!res.ok) throw new Error('데이터를 불러오지 못했습니다.');
+      const json = await res.json();
+      return {
+        data: (json.data.data ?? []) as LP[],
+        nextCursor: json.data.nextCursor ?? null,
+        hasNext: json.data.hasNext ?? false,
+      };
+    },
+    // ✅ cursor 기반 getNextPageParam
+    getNextPageParam: (lastPage) =>
+      lastPage.hasNext ? lastPage.nextCursor : undefined,
+    // ✅ 공백만 입력됐을 땐 쿼리 실행 안 함
+    enabled: search === '' || debouncedQuery.trim().length > 0,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+    initialPageParam: 0,
+  });
 
   const createLp = useMutation({
     mutationFn: createLpAPI,
@@ -97,6 +127,7 @@ const LPListPage = () => {
     onError: (error: Error) => alert(error.message),
   });
 
+  // ✅ 무한스크롤 IntersectionObserver
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => { if (entries[0].isIntersecting && hasNextPage) fetchNextPage(); },
@@ -105,6 +136,9 @@ const LPListPage = () => {
     if (observerRef.current) observer.observe(observerRef.current);
     return () => observer.disconnect();
   }, [hasNextPage, fetchNextPage]);
+
+  // ✅ pages를 flat하게 펼쳐서 LP 목록으로 변환
+  const lpList = data?.pages.flatMap((page) => page.data) ?? [];
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -122,13 +156,18 @@ const LPListPage = () => {
           md:static md:translate-x-0 md:top-0
         `}>
           <nav className="flex flex-col gap-2">
-            <button onClick={() => { navigate('/lp'); setSidebarOpen(false); }} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#1a1a1a] text-gray-300 hover:text-white transition-all text-left">
+            <button
+              onClick={() => {
+                setSidebarOpen(false);
+                setTimeout(() => searchRef.current?.focus(), 300);
+              }}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#1a1a1a] text-gray-300 hover:text-white transition-all text-left"
+            >
               찾기
             </button>
             <button onClick={() => { navigate('/mypage'); setSidebarOpen(false); }} className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#1a1a1a] text-gray-300 hover:text-white transition-all text-left">
               마이페이지
             </button>
-            {/* ✅ 탈퇴하기 → ConfirmModal 오픈 */}
             <button
               onClick={() => { setDeleteModalOpen(true); setSidebarOpen(false); }}
               className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#1a1a1a] text-gray-500 hover:text-red-400 transition-all text-left w-full mt-4 border-t border-gray-800 pt-4"
@@ -152,6 +191,29 @@ const LPListPage = () => {
             </div>
           </div>
 
+          {/* ✅ 검색창 */}
+          <div className="relative mb-6">
+            <input
+              ref={searchRef}
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="LP 제목으로 검색..."
+              className="w-full bg-[#1a1a1a] text-white placeholder-gray-500 border border-gray-700 rounded-xl px-4 py-2.5 pr-10 text-sm focus:outline-none focus:border-[#ff007a] transition-colors"
+            />
+            {search !== debouncedQuery && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs animate-pulse">⏳</span>
+            )}
+            {search && search === debouncedQuery && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white text-sm transition-colors"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
           {isLoading && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {Array.from({ length: 10 }).map((_, i) => <SkeletonCard key={i} />)}
@@ -165,9 +227,16 @@ const LPListPage = () => {
             </div>
           )}
 
-          {data && Array.isArray(data) && (
+          {!isLoading && !isError && lpList.length === 0 && debouncedQuery && (
+            <div className="flex flex-col items-center justify-center h-60 gap-2 text-gray-500">
+              <p className="text-lg">🎵</p>
+              <p>"{debouncedQuery}"에 대한 검색 결과가 없어요.</p>
+            </div>
+          )}
+
+          {lpList.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {data.map((lp) => (
+              {lpList.map((lp) => (
                 <div key={lp.id} onClick={() => navigate(`/lp/${lp.id}`)} className="cursor-pointer group">
                   <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-900">
                     <img src={lp.thumbnail} alt={lp.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onError={(e) => { e.currentTarget.src = 'https://via.placeholder.com/300x300?text=LP'; }} />
@@ -195,9 +264,8 @@ const LPListPage = () => {
 
       <button onClick={() => setModalOpen(true)} className="fixed bottom-8 right-8 w-14 h-14 bg-[#ff007a] text-white text-3xl font-bold rounded-full shadow-lg shadow-[#ff007a]/40 hover:bg-[#e6006e] hover:scale-110 transition-all flex items-center justify-center z-50">+</button>
 
-      <LpCreateModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSubmit={(data) => createLp.mutate(data)} isLoading={createLp.isPending} />
+      <LpCreateModal isOpen={modalOpen} onClose={() => setModalOpen(false)} onSubmit={(formData) => createLp.mutate(formData)} isLoading={createLp.isPending} />
 
-      {/* ✅ 탈퇴 확인 모달 */}
       <ConfirmModal
         isOpen={deleteModalOpen}
         title="정말 탈퇴하시겠어요?"
